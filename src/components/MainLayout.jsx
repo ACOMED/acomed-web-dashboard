@@ -42,12 +42,13 @@ export default function MainLayout({ onLogout }) {
 
   /* ── Derived: current page title ─────────────────────────────────────────── */
   const pageTitle =
-    activePage === "dashboard"   ? "Tableau de Bord"
-    : activePage === "watchlist" ? "Hôpitaux Sauvegardés"
+    activePage === "dashboard"  ? "Tableau de Bord"
+    : activePage === "pre_audit" ? "Checklists Pré-Audit"
+    : activePage === "capa"      ? "Gestion des CAPA"
     : activePage === "inspectors"? "Inspecteurs"
     : "Historique";
 
-  const today = new Date().toLocaleDateString("fr-MA", {
+  const today = new Date().toLocaleDateString("fr-MA", { 
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
@@ -122,21 +123,21 @@ export default function MainLayout({ onLogout }) {
           {/* ── Inspecteurs page ─────────────────────────────────────────────── */}
           {activePage === "inspectors" && <InspectorsView />}
 
-          {/* ── Watchlist placeholder ────────────────────────────────────────── */}
-          {activePage === "watchlist" && (
+          {/* ── Pré-Audit placeholder ────────────────────────────────────────── */}
+          {activePage === "pre_audit" && (
             <div className="placeholder-view">
-              <span className="placeholder-icon">🔖</span>
-              <h2 className="placeholder-title">Hôpitaux Sauvegardés</h2>
-              <p className="placeholder-text">Votre liste de surveillance sera affichée ici.</p>
+              <span className="placeholder-icon">📋</span>
+              <h2 className="placeholder-title">Checklists Pré-Audit</h2>
+              <p className="placeholder-text">Les guides de préparation et checklists avant l'audit HACCP seront affichés ici.</p>
             </div>
           )}
 
-          {/* ── History placeholder ──────────────────────────────────────────── */}
-          {activePage === "history" && (
+          {/* ── CAPA placeholder ──────────────────────────────────────────── */}
+          {activePage === "capa" && (
             <div className="placeholder-view">
-              <span className="placeholder-icon">📋</span>
-              <h2 className="placeholder-title">Historique des Audits</h2>
-              <p className="placeholder-text">L&apos;historique de vos consultations sera affiché ici.</p>
+              <span className="placeholder-icon">🛠️</span>
+              <h2 className="placeholder-title">Gestion des CAPA</h2>
+              <p className="placeholder-text">Tableau Kanban (À faire → En cours → Clôturée) pour le suivi des actions correctives.</p>
             </div>
           )}
         </main>

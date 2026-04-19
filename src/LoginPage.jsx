@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; // 1. ضروري نعيطو لـ useState
-import './LoginPage.css'; 
+import './LoginPage.css';
 
 const LoginPage = () => {
 
@@ -8,19 +8,6 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [buttonText, setButtonText] = useState('Sign In'); // السمية الأصلية د البوطونة
 
-    // هاد الفانكشن كيتعيط ليها ملي كنكليكيو على البوطونة
-    const handleLogin = (e) => {
-        e.preventDefault(); // باش الصفحة ماديرش ريفريش
-
-        // 3. هاهي الـ if العادية اللي هضرتي عليها
-        if (email === '17ay2004@gmail.com' && password === '12345678') {
-            setButtonText('كاين راه تسجلتي'); // يلا كان صحيح، بدلو السمية د البوطونة
-            console.log("راك دخلتي بنجاح!");
-        } else {
-            setButtonText('غلط، عاود جرب'); // نقدر نزيدو هادي يلا كتب شي حاجة غالطة
-            console.log("الإيميل ولا المودباس غالطين");
-        }
-    };
 
     return (
         <div className="login-container">

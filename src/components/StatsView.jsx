@@ -116,10 +116,10 @@ export default function StatsView({ hospital, onBack }) {
               Niveau {hospital.accreditationLevel}
             </span>
             <span className="stats-compliance-tag" style={{
-              backgroundColor: hospital.globalScore >= 70 ? "#d1fae5" : "#fee2e2",
-              color: hospital.globalScore >= 70 ? "#065f46" : "#991b1b",
+              backgroundColor: hospital.scoreConformite >= 70 ? "#d1fae5" : "#fee2e2",
+              color: hospital.scoreConformite >= 70 ? "#065f46" : "#991b1b",
             }}>
-              {hospital.globalScore >= 70 ? "Conforme" : "Non conforme"}
+              {hospital.scoreConformite >= 70 ? "Conforme" : "Non conforme"}
             </span>
           </div>
           <h1 className="stats-hospital-name">{hospital.name}</h1>
@@ -134,26 +134,37 @@ export default function StatsView({ hospital, onBack }) {
             <div className="stats-meta-item"><span className="stats-meta-icon">🔬</span><span>Service: {hospital.service}</span></div>
           </div>
         </div>
-        <ScoreRing score={hospital.globalScore} />
+
+        {/* ── Deux doughnut rings côte à côte ── */}
+        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <span style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "#10b981" }}>Conformité</span>
+            <ScoreRing score={hospital.scoreConformite} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <span style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "#3b82f6" }}>Maturité</span>
+            <ScoreRing score={hospital.scoreMaturite} />
+          </div>
+        </div>
       </div>
 
       <div className="stats-summary-row">
         <div className="stats-summary-card">
-          <span className="stats-summary-card-label">Score Global</span>
-          <span className="stats-summary-card-value" style={{ color: getScoreColor(hospital.globalScore) }}>{hospital.globalScore}%</span>
-          <span className="stats-summary-card-sub">Moy. nationale: {NATIONAL_AVERAGE.global}%</span>
-        </div>
-        <div className="stats-summary-card">
-          <span className="stats-summary-card-label">Incidents Totaux</span>
-          <span className="stats-summary-card-value stats-summary-card-value-neutral">{hospital.totalIncidents}</span>
-          <span className="stats-summary-card-sub">sur 12 derniers mois</span>
-        </div>
-        <div className="stats-summary-card">
-          <span className="stats-summary-card-label">Incidents Critiques</span>
-          <span className="stats-summary-card-value" style={{ color: hospital.criticalIncidents > 0 ? "#ef4444" : "#10b981" }}>
-            {hospital.criticalIncidents}
+          <span className="stats-summary-card-label">Non-conformités</span>
+          <span className="stats-summary-card-value" style={{ color: hospital.ncMajeures > 0 ? "#ef4444" : "#f59e0b" }}>
+            {(hospital.ncMajeures || 0) + (hospital.ncMineures || 0)}
           </span>
-          <span className="stats-summary-card-sub">{hospital.criticalIncidents === 0 ? "Aucun incident critique" : "Attention requise"}</span>
+          <span className="stats-summary-card-sub">{hospital.ncMajeures || 0} Majeures, {hospital.ncMineures || 0} Mineures</span>
+        </div>
+        <div className="stats-summary-card">
+          <span className="stats-summary-card-label">CAPA Ouvertes</span>
+          <span className="stats-summary-card-value stats-summary-card-value-neutral">{hospital.capaOuvertes || 0}</span>
+          <span className="stats-summary-card-sub">Actions en attente de traitement</span>
+        </div>
+        <div className="stats-summary-card">
+          <span className="stats-summary-card-label">CAPA Clôturées</span>
+          <span className="stats-summary-card-value" style={{ color: "#10b981" }}>{hospital.capaCloturees || 0}</span>
+          <span className="stats-summary-card-sub">Actions résolues avec succès</span>
         </div>
       </div>
 

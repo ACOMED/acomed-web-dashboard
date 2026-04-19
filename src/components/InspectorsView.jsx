@@ -159,7 +159,7 @@ export default function InspectorsView() {
       || ins.region.toLowerCase().includes(search.toLowerCase())
       || ins.speciality.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
-  });
+  }); 
 
   const counts = {
     total:      INSPECTORS.length,

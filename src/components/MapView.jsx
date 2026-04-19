@@ -9,7 +9,7 @@ export default function MapView({ hospitals, onSelectHospital }) {
   const handlePinClick = useCallback(
     (hospital) => onSelectHospital(hospital),
     [onSelectHospital]
-  );
+  ); 
 
   return (
     <div className="map-view">
