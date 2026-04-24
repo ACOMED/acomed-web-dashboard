@@ -5,11 +5,22 @@ import "./pre-audit-tools.css";
    PRE-AUDIT TOOLS: CONSTANTS & HELPERS 
    ═══════════════════════════════════════════════════════════════════ */
 
+const FACILITIES = [
+  { id: 'f1', name: 'Facility Nord' },
+  { id: 'f2', name: 'hassan 2 ' },
+  { id: 'f3', name: 'sbitar ayman ligassi ' },
+  { id: 'f4', name: 'Facility Sud' }
+];
+
+const INSPECTORS = [
+  { id: 'i1', name: 'Isabelle Bernard' },
+  { id: 'i2', name: 'Ayman ligassi ' },
+  { id: 'i2', name: 'Samuel Dupuis' }
+];
+
 let _counter = 0;
 const genId = () => `pnode_${Date.now()}_${++_counter}`;
 
-// Structure exactly as requested:
-// { id: 'uniq_id', title: '', description: '', answer_type: 'BOOLEAN', children: [] }
 const createNode = () => ({
   id: genId(),
   title: "",
@@ -85,7 +96,6 @@ const TYPE_META = {
 /* ═══════════════════════════════════════════════════════════════════
    FLOW NODE CARD (Recursive Component)
    ═══════════════════════════════════════════════════════════════════ */
-// This component automatically syncs its data back to the central state instantly.
 function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
   const meta = TYPE_META[node.answer_type] ?? TYPE_META.BOOLEAN;
   const hasChildren = node.children && node.children.length > 0;
@@ -96,7 +106,6 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
 
   // Calculate SVG branch lines instantly (WITH INFINITE LOOP FIX)
   useLayoutEffect(() => {
-    // 1. الفران الأول: إيلا ماكانوش الدراري (children)، كنحبسو الرسم بلا مانديرو حلقة مفرغة
     if (!portRef.current || !childRowRef.current || !hasChildren) {
       setSvgLines(prev => prev.length === 0 ? prev : []);
       return;
@@ -118,10 +127,9 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
       calculatedLines.push({ sx, sy, mx: sx, my, tx, ty });
     });
 
-    // 2. الفران الثاني: كنقارنو الخطوط الجداد مع القدام باش مانعاودوش نرسمو إيلا كانو بحال بحال
     setSvgLines(prev => JSON.stringify(prev) === JSON.stringify(calculatedLines) ? prev : calculatedLines);
 
-  }, [hasChildren, node.children]); // <--- هاد جوج لعيبات هما لي كيحبسو الـ Infinite Loop
+  }, [hasChildren, node.children]);
 
   return (
     <div className="pa-node-wrap">
@@ -142,14 +150,14 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
         <div className="pa-node-body">
           <input
             className="pa-input-title"
-            value={node.title} // Auto-Syncing value
-            onChange={(e) => onUpdate(node.id, { title: e.target.value })} // Instant patch
+            value={node.title}
+            onChange={(e) => onUpdate(node.id, { title: e.target.value })}
             placeholder={isRoot ? "Ex: Question de préparation principale..." : "Ex: Question de suivi optionnel..."}
           />
           <textarea
             className="pa-input-desc"
-            value={node.description} // Auto-Syncing value
-            onChange={(e) => onUpdate(node.id, { description: e.target.value })} // Instant patch
+            value={node.description}
+            onChange={(e) => onUpdate(node.id, { description: e.target.value })}
             placeholder="Instruction ou description nécessaire..."
             rows={2}
           />
@@ -160,8 +168,8 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
             </div>
             <select
               className="pa-select-type"
-              value={node.answer_type} // Auto-Syncing value
-              onChange={(e) => onUpdate(node.id, { answer_type: e.target.value })} // Instant patch
+              value={node.answer_type}
+              onChange={(e) => onUpdate(node.id, { answer_type: e.target.value })}
               style={{ color: meta.color, borderColor: `${meta.color}55`, background: meta.bg }}
             >
               <option value="BOOLEAN">✅ OUI / NON</option>
@@ -222,9 +230,9 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
                 <FlowNode
                   node={childNode}
                   isRoot={false}
-                  onAddChild={onAddChild} // Recursively passed down
-                  onUpdate={onUpdate}     // Recursively passed down
-                  onDelete={onDelete}     // Recursively passed down
+                  onAddChild={onAddChild}
+                  onUpdate={onUpdate}
+                  onDelete={onDelete}
                 />
               </div>
             ))}
@@ -245,17 +253,21 @@ export default function PreAuditTools() {
   const [nodes, setNodes] = useState([]);
   const [saveStatus, setSaveStatus] = useState("idle");
 
-  // Interaction: Adds a Root Node instantly UI re-draw 
+  // NEW: MISSION ASSIGNMENT STATE
+  const [missionData, setMissionData] = useState({
+    facilityId: "",
+    inspectorId: "",
+    scheduledTime: ""
+  });
+
   const handleAddRootNode = useCallback(() => {
     setNodes((prev) => [...prev, createNode()]);
   }, []);
 
-  // Interaction: Appends a child explicitly linked to ParentID UI re-draw
   const handleAddChildNode = useCallback((parentId) => {
     setNodes((prev) => addChildToNode(prev, parentId, createNode()));
   }, []);
 
-  // Sync: Patches any node nested at any level directly without dropping components
   const handleUpdateNode = useCallback((id, patch) => {
     setNodes((prev) => updateNodeById(prev, id, (n) => ({ ...n, ...patch })));
   }, []);
@@ -266,17 +278,23 @@ export default function PreAuditTools() {
 
   const handleSave = useCallback(async () => {
     setSaveStatus("saving");
-    // Proof of nested state availability. The nodes array is 100% up-to-date and complete here.
-    console.log("FINAL JSON TREE PAYLOAD ->", JSON.stringify({ guideName, nodes }, null, 2));
+
+    // NEW: CONSTRUCT MERGED PAYLOAD
+    const finalPayload = {
+      guideName,
+      mission: missionData,
+      nodes
+    };
+    console.log("FINAL JSON TREE PAYLOAD ->", JSON.stringify(finalPayload, null, 2));
 
     setTimeout(() => {
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }, 1500);
-  }, [nodes, guideName]);
+  }, [nodes, guideName, missionData]);
 
   return (
-    <div className="pa-builder-view">
+    <div className="pa-builder-view" style={{ display: "block", height: "auto", overflowY: "auto", paddingBottom: "2rem" }}>
       <div className="pa-builder-header">
         <div>
           <h1 className="pa-builder-title">
@@ -308,7 +326,8 @@ export default function PreAuditTools() {
         </button>
       </div>
 
-      <div className="pa-builder-canvas">
+      {/* 2. CANVAS BREATHING ROOM: minHeight: "65vh" */}
+      <div className="pa-builder-canvas" style={{ minHeight: "65vh", overflow: "visible" }}>
         {nodes.length === 0 ? (
           <div className="pa-empty-state">
             <Ico.ClipboardCheck style={{ width: "3.5rem", height: "3.5rem", opacity: 0.2 }} />
@@ -329,6 +348,66 @@ export default function PreAuditTools() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* 3. & 4. CLEAR SEPARATION & MISSION CARD ELEVATION */}
+      <div style={{
+        marginTop: "3rem",
+        marginBottom: "2rem",
+        marginLeft: "2rem",
+        marginRight: "2rem",
+        backgroundColor: "white", /* Hardcoded visually distinct card per requirements */
+        borderRadius: "0.75rem",
+        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)",
+        padding: "2rem"
+      }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: "700", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <Ico.ClipboardCheck style={{ width: "1.2rem", height: "1.2rem", color: "#6366f1" }} />
+          <span style={{ color: "var(--text-color, #0f172a)" }}>Assignation de la Mission</span>
+        </h2>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Établissement (Facility)</label>
+            <select
+              className="pa-toolbar-input"
+              style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem" }}
+              value={missionData.facilityId}
+              onChange={(e) => setMissionData(p => ({ ...p, facilityId: e.target.value }))}
+            >
+              <option value="">Sélectionner un établissement...</option>
+              {FACILITIES.map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Inspecteur</label>
+            <select
+              className="pa-toolbar-input"
+              style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem" }}
+              value={missionData.inspectorId}
+              onChange={(e) => setMissionData(p => ({ ...p, inspectorId: e.target.value }))}
+            >
+              <option value="">Sélectionner un inspecteur...</option>
+              {INSPECTORS.map(i => (
+                <option key={i.id} value={i.id}>{i.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Date Planifiée</label>
+            <input
+              type="datetime-local"
+              className="pa-toolbar-input"
+              style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem", color: "inherit" }}
+              value={missionData.scheduledTime}
+              onChange={(e) => setMissionData(p => ({ ...p, scheduledTime: e.target.value }))}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
