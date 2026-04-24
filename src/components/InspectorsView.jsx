@@ -78,9 +78,9 @@ const INSPECTORS = [
 ];
 
 const STATUS_CONFIG = {
-  active:     { label: "Actif",       bg: "rgba(16,185,129,0.12)",  color: "#10b981", dot: "#10b981" },
-  on_mission: { label: "En Mission",  bg: "rgba(245,158,11,0.12)",  color: "#f59e0b", dot: "#f59e0b" },
-  inactive:   { label: "Inactif",     bg: "rgba(148,163,184,0.12)", color: "#94a3b8", dot: "#94a3b8" },
+  active: { label: "Actif", bg: "rgba(16,185,129,0.12)", color: "#10b981", dot: "#10b981" },
+  on_mission: { label: "En Mission", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", dot: "#f59e0b" },
+  inactive: { label: "Inactif", bg: "rgba(148,163,184,0.12)", color: "#94a3b8", dot: "#94a3b8" },
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -127,11 +127,11 @@ function InspectorCard({ inspector }) {
           <span>{inspector.region}</span>
         </div>
         <div className="inspector-meta-item">
-          <span className="inspector-meta-icon">🏥</span>
+          <span className="inspector-meta-icon"></span>
           <span>{inspector.assignedHospital}</span>
         </div>
         <div className="inspector-meta-item">
-          <span className="inspector-meta-icon">📋</span>
+          <span className="inspector-meta-icon"></span>
           <span>Dernier audit: {inspector.lastMission}</span>
         </div>
       </div>
@@ -159,13 +159,13 @@ export default function InspectorsView() {
       || ins.region.toLowerCase().includes(search.toLowerCase())
       || ins.speciality.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
-  }); 
+  });
 
   const counts = {
-    total:      INSPECTORS.length,
-    active:     INSPECTORS.filter((i) => i.status === "active").length,
+    total: INSPECTORS.length,
+    active: INSPECTORS.filter((i) => i.status === "active").length,
     on_mission: INSPECTORS.filter((i) => i.status === "on_mission").length,
-    inactive:   INSPECTORS.filter((i) => i.status === "inactive").length,
+    inactive: INSPECTORS.filter((i) => i.status === "inactive").length,
   };
 
   return (
@@ -210,10 +210,10 @@ export default function InspectorsView() {
       <div className="inspectors-toolbar">
         <div className="inspectors-filter-tabs">
           {[
-            { key: "all",        label: "Tous" },
-            { key: "active",     label: "Actifs" },
+            { key: "all", label: "Tous" },
+            { key: "active", label: "Actifs" },
             { key: "on_mission", label: "En Mission" },
-            { key: "inactive",   label: "Inactifs" },
+            { key: "inactive", label: "Inactifs" },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -243,7 +243,7 @@ export default function InspectorsView() {
       {/* ── Card list ── */}
       {filtered.length === 0 ? (
         <div className="inspectors-empty">
-          <span style={{ fontSize: "2.5rem" }}>🔍</span>
+          <span style={{ fontSize: "2.5rem" }}></span>
           <p>Aucun inspecteur ne correspond à votre recherche.</p>
         </div>
       ) : (

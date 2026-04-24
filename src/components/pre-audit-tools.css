@@ -1,0 +1,419 @@
+.pa-builder-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+}
+
+html.dark .pa-builder-view {
+  background: #0f172a;
+}
+
+/* Header */
+.pa-builder-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+html.dark .pa-builder-header {
+  border-color: #1e293b;
+}
+
+.pa-builder-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+html.dark .pa-builder-title {
+  color: #f1f5f9;
+}
+
+.pa-builder-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0.25rem 0 0 0;
+}
+
+html.dark .pa-builder-subtitle {
+  color: #94a3b8;
+}
+
+/* Toolbar */
+.pa-builder-toolbar {
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+html.dark .pa-builder-toolbar {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+.pa-toolbar-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pa-toolbar-input {
+  flex: 1;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+html.dark .pa-toolbar-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: white;
+}
+
+/* Canvas Area */
+.pa-builder-canvas {
+  flex: 1;
+  width: 100%;
+  overflow: auto;
+  position: relative;
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  background-size: 24px 24px;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+html.dark .pa-builder-canvas {
+  background-color: #020617;
+  background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
+}
+
+.pa-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem;
+  text-align: center;
+  color: #64748b;
+}
+
+/* Root nodes container */
+.pa-root-nodes {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 3rem;
+  width: max-content;
+  /* Allows horizontal scrolling */
+}
+
+.pa-root-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Add Buttons */
+.pa-btn-add-section {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: #e0e7ff;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pa-btn-add-section:hover {
+  background: #c7d2fe;
+}
+
+html.dark .pa-btn-add-section {
+  background: rgba(79, 70, 229, 0.2);
+  color: #818cf8;
+}
+
+html.dark .pa-btn-add-section:hover {
+  background: rgba(79, 70, 229, 0.3);
+}
+
+.pa-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  background: #10b981;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pa-btn-save:hover {
+  background: #059669;
+}
+
+.pa-btn-save:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NODE CARDS & TREE
+───────────────────────────────────────────────────────────────── */
+.pa-node-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pa-node-card {
+  width: 320px;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  z-index: 10;
+}
+
+html.dark .pa-node-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.pa-node-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  border-color: var(--node-color, #cbd5e1);
+}
+
+/* Card Header */
+.pa-node-header {
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+html.dark .pa-node-header {
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+
+.pa-node-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pa-node-del {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.pa-node-del:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+html.dark .pa-node-del:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Card Body Inputs */
+.pa-node-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pa-input-title {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #cbd5e1;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 0 0 0.25rem 0;
+  outline: none;
+}
+
+html.dark .pa-input-title {
+  color: #f1f5f9;
+  border-bottom-color: #475569;
+}
+
+.pa-input-title::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.pa-input-desc {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: #475569;
+  outline: none;
+  resize: none;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+html.dark .pa-input-desc {
+  color: #cbd5e1;
+}
+
+.pa-input-desc::placeholder {
+  color: #94a3b8;
+}
+
+.pa-select-type {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.375rem;
+  border: 1px solid;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+/* Card Port / Connectors */
+.pa-node-footer {
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: center;
+}
+
+html.dark .pa-node-footer {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+.pa-btn-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  padding: 0.4rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.pa-btn-branch:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+html.dark .pa-btn-branch {
+  background: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+html.dark .pa-btn-branch:hover {
+  background: #334155;
+  color: white;
+  border-color: #64748b;
+}
+
+.pa-terminal {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  user-select: none;
+}
+
+/* Recursive Container */
+.pa-children-container {
+  position: relative;
+  margin-top: 3rem;
+  /* Space for SVG connectors */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pa-children-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+}
+
+.pa-child-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* SVG Lines */
+.pa-svg-overlay {
+  position: absolute;
+  top: -3rem;
+  /* Spans from the parent port down to the child cards */
+  left: 0;
+  width: 100%;
+  height: 3rem;
+  /* The vertical gap size */
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}

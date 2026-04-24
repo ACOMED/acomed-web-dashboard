@@ -9,7 +9,7 @@ export default function MapView({ hospitals, onSelectHospital }) {
   const handlePinClick = useCallback(
     (hospital) => onSelectHospital(hospital),
     [onSelectHospital]
-  ); 
+  );
 
   return (
     <div className="map-view">
@@ -113,8 +113,8 @@ export default function MapView({ hospitals, onSelectHospital }) {
                   <span className="map-pin-card-score" style={{ color: getScoreColor(hospital.globalScore) }}>
                     {hospital.globalScore}%
                   </span>
-                  <span className="map-pin-card-badge" style={{ backgroundColor: getAccreditationColor(hospital.accreditationLevel) }}>
-                    Niv. {hospital.accreditationLevel}
+                  <span className="map-pin-card-score" style={{ color: getScoreColor(hospital.scoreConformite) }}>
+                    {hospital.scoreConformite}%
                   </span>
                 </div>
                 <span className="map-pin-card-cta">Cliquez pour les détails →</span>

@@ -1,6 +1,16 @@
 import { useCallback } from "react";
 import { useTheme } from "../context/ThemeContext";
 
+function IconClipboard() {
+  return (
+    <svg className="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+      <rect x="9" y="3" width="6" height="4" rx="1" />
+      <path d="M9 12h6M9 16h4" />
+    </svg>
+  );
+}
+
 function IconGrid() {
   return (
     <svg className="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -75,10 +85,11 @@ function IconClose() {
 }
 
 const NAV_ITEMS = [
-  { id: "dashboard",  label: "Tableau de Bord",      Icon: IconGrid      },
-  { id: "watchlist",  label: "Hôpitaux Sauvegardés", Icon: IconBookmark  },
-  { id: "history",    label: "Historique",            Icon: IconClock     },
-  { id: "inspectors", label: "Inspecteurs",           Icon: IconUserBadge },
+  { id: "dashboard", label: "Tableau de Bord", Icon: IconGrid },
+  { id: "pre_audit", label: "Checklists Pré-Audit", Icon: IconClipboard },
+  { id: "watchlist", label: "Hôpitaux Sauvegardés", Icon: IconBookmark },
+  { id: "history", label: "Historique", Icon: IconClock },
+  { id: "inspectors", label: "Inspecteurs", Icon: IconUserBadge },
 ];
 
 export default function Sidebar({ isOpen, onClose, activePage, onNavigate, onLogout }) {
@@ -96,7 +107,7 @@ export default function Sidebar({ isOpen, onClose, activePage, onNavigate, onLog
       <aside className={`sidebar-container ${isOpen ? "sidebar-open" : ""}`} aria-label="Main navigation">
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <span className="sidebar-brand-logo">🏥</span>
+            <span className="sidebar-brand-logo"></span>
             <div className="sidebar-brand-text">
               <span className="sidebar-brand-name">ACOMED</span>
               <span className="sidebar-brand-sub">Compliance Dashboard</span>

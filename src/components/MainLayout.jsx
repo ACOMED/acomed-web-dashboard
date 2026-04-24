@@ -5,6 +5,7 @@ import StatsView from "./StatsView";
 import InspectorsView from "./InspectorsView";
 import { useTheme } from "../context/ThemeContext";
 import { HOSPITALS, NATIONAL_AVERAGE } from "../data/hospitalData";
+import PreAuditTools from './PreAuditTools';
 
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  MAIN COMPONENT  (static mock-data mode — no API calls)                    ║
@@ -13,13 +14,13 @@ export default function MainLayout({ onLogout }) {
   const { darkMode } = useTheme();
 
   /* ── UI state ────────────────────────────────────────────────────────────── */
-  const [sidebarOpen,      setSidebarOpen]      = useState(false);
-  const [activePage,       setActivePage]       = useState("dashboard");
-  const [currentView,      setCurrentView]      = useState("map");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activePage, setActivePage] = useState("dashboard");
+  const [currentView, setCurrentView] = useState("map");
   const [selectedHospital, setSelectedHospital] = useState(null);
 
   /* ── Navigation callbacks ────────────────────────────────────────────────── */
-  const openSidebar  = useCallback(() => setSidebarOpen(true),  []);
+  const openSidebar = useCallback(() => setSidebarOpen(true), []);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   const handleNavigate = useCallback((pageId) => {
@@ -42,13 +43,13 @@ export default function MainLayout({ onLogout }) {
 
   /* ── Derived: current page title ─────────────────────────────────────────── */
   const pageTitle =
-    activePage === "dashboard"  ? "Tableau de Bord"
-    : activePage === "pre_audit" ? "Checklists Pré-Audit"
-    : activePage === "capa"      ? "Gestion des CAPA"
-    : activePage === "inspectors"? "Inspecteurs"
-    : "Historique";
+    activePage === "dashboard" ? "Tableau de Bord"
+      : activePage === "pre_audit" ? "Checklists Pré-Audit"
+        : activePage === "capa" ? "Gestion des CAPA"
+          : activePage === "inspectors" ? "Inspecteurs"
+            : "Historique";
 
-  const today = new Date().toLocaleDateString("fr-MA", { 
+  const today = new Date().toLocaleDateString("fr-MA", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
@@ -124,13 +125,7 @@ export default function MainLayout({ onLogout }) {
           {activePage === "inspectors" && <InspectorsView />}
 
           {/* ── Pré-Audit placeholder ────────────────────────────────────────── */}
-          {activePage === "pre_audit" && (
-            <div className="placeholder-view">
-              <span className="placeholder-icon">📋</span>
-              <h2 className="placeholder-title">Checklists Pré-Audit</h2>
-              <p className="placeholder-text">Les guides de préparation et checklists avant l'audit HACCP seront affichés ici.</p>
-            </div>
-          )}
+          {activePage === "pre_audit" && <PreAuditTools />}
 
           {/* ── CAPA placeholder ──────────────────────────────────────────── */}
           {activePage === "capa" && (
