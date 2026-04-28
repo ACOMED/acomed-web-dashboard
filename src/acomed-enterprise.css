@@ -1,0 +1,320 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════
+ *  ACOMED — Enterprise Light Design System overrides
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Reddit+Sans:ital,wght@0,200..900;1,200..900&display=swap');
+
+:root {
+  --color-bg: #ffffff;
+  --color-text-primary: #121319;
+  --color-text-secondary: #5c5d66;
+  --color-border: #d6dce6;
+  --color-border-dark: #101114;
+  --font-sans: "Reddit Sans", "Segoe UI", Tahoma, sans-serif;
+  --card-shadow: 0 5px 15px rgba(12, 15, 23, 0.06);
+}
+
+body,
+html,
+#root,
+.app-layout {
+  font-family: var(--font-sans) !important;
+  color: var(--color-text-primary) !important;
+  background: var(--color-bg) !important;
+}
+
+/* Overriding Dark Mode Completely */
+html.dark body,
+html.dark #root,
+html.dark .app-layout {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+/* ================================================================
+   TOPBAR
+   ================================================================ */
+.topbar {
+  background: #f7f7f7 !important;
+  color: #101114 !important;
+  border-bottom: 3px solid #101114 !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+html.dark .topbar {
+  background: #1e293b !important;
+  border-bottom: 3px solid #0f172a !important;
+}
+
+.topbar-title {
+  color: #101114 !important;
+}
+
+html.dark .topbar-title {
+  color: #f1f5f9 !important;
+}
+
+/* ================================================================
+   SIDEBAR
+   ================================================================ */
+.sidebar-container {
+  background: #ffffff !important;
+  border-right: 1px solid var(--color-border) !important;
+}
+
+html.dark .sidebar-container {
+  background: #1e293b !important;
+  border-right: 1px solid #334155 !important;
+}
+
+.sidebar-brand-name {
+  color: #101114 !important;
+}
+
+html.dark .sidebar-brand-name {
+  color: #f1f5f9 !important;
+}
+
+.sidebar-nav-item:hover,
+.sidebar-theme-toggle:hover {
+  background: #f1f5f9 !important;
+  color: #101114 !important;
+}
+
+.sidebar-nav-item-active {
+  background: #f2f5f9 !important;
+  color: #101114 !important;
+  font-weight: 700 !important;
+}
+
+html.dark .sidebar-nav-item {
+  color: #94a3b8 !important;
+}
+
+html.dark .sidebar-nav-item:hover,
+html.dark .sidebar-theme-toggle:hover {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .sidebar-nav-item-active {
+  background: #334155 !important;
+  color: #10b981 !important;
+}
+
+html.dark .sidebar-user-name {
+  color: #f1f5f9 !important;
+}
+
+/* ================================================================
+   CARDS & PANELS
+   ================================================================ */
+.card,
+.stats-card,
+.history-card,
+.inspectors-card,
+.capa-card,
+.users-table-card {
+  background: #ffffff !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+html.dark .card,
+html.dark .stats-card,
+html.dark .history-card,
+html.dark .inspectors-card,
+html.dark .capa-card,
+html.dark .users-table-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+  color: #f1f5f9 !important;
+}
+
+.map-container {
+  background: #fbfcfe !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+}
+
+html.dark .map-container {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+/* ================================================================
+   STANDARD BUTTON
+   ================================================================ */
+.btn-standard {
+  border: 1px solid #bcc5d3 !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f2f5f9 100%) !important;
+  color: #121319 !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 8px 14px !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-standard:hover:not(:disabled) {
+  background: #eef4fb !important;
+  border-color: #9eb2cf !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-standard:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+html.dark .btn-standard {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%) !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+/* ================================================================
+   PRIMARY BUTTON
+   ================================================================ */
+.btn-primary {
+  border: 1px solid #10b981 !important;
+  border-radius: 10px !important;
+  background: #10b981 !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 8px 14px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 8px 24px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+/* Danger Button Variation */
+.btn-danger {
+  border: 1px solid #ef4444 !important;
+  border-radius: 10px !important;
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 8px 14px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 8px 24px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* ================================================================
+   INPUTS
+   ================================================================ */
+.input-standard {
+  border: 1px solid #c8ced9 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #101114 !important;
+  padding: 10px 12px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, background-color 0.2s ease !important;
+  width: 100%;
+}
+
+.input-standard:focus {
+  border-color: #9eb2cf !important;
+  background: #eef4ff !important;
+}
+
+html.dark .input-standard {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+/* ================================================================
+   TABLES
+   ================================================================ */
+.enterprise-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.enterprise-table th {
+  background: #f7f7f7 !important;
+  color: #5c5d66 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  padding: 12px 16px !important;
+  border-bottom: 2px solid #d6dce6 !important;
+  text-align: left;
+}
+
+.enterprise-table td {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #121319 !important;
+  font-size: 13px !important;
+}
+
+html.dark .enterprise-table th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+html.dark .enterprise-table td {
+  border-bottom: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Specific component overrides globally */
+.map-title,
+.stats-hospital-name {
+  color: #121319 !important;
+}
+
+html.dark .map-title,
+html.dark .stats-hospital-name {
+  color: #f1f5f9 !important;
+}

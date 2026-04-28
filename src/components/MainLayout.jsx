@@ -1,22 +1,26 @@
 import { useState, useCallback } from "react";
 import Sidebar from "./Sidebar";
-import MapView from "./MapView";
+import FacilitiesList from "./FacilitiesList";
 import StatsView from "./StatsView";
 import InspectorsView from "./InspectorsView";
 import { useTheme } from "../context/ThemeContext";
 import { HOSPITALS, NATIONAL_AVERAGE } from "../data/hospitalData";
 import PreAuditTools from './PreAuditTools';
+import CapaBoard from "./CapaBoard";
+import AuditsHistory from "./AuditsHistory";
+import { AuthProvider } from "./AuthContext";
+import UsersManagement from "./UsersManagement";
+import AccountSettings from "./AccountSettings";
 
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  MAIN COMPONENT  (static mock-data mode — no API calls)                    ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 export default function MainLayout({ onLogout }) {
   const { darkMode } = useTheme();
-
   /* ── UI state ────────────────────────────────────────────────────────────── */
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState("dashboard");
-  const [currentView, setCurrentView] = useState("map");
+  const [currentView, setCurrentView] = useState("list");
   const [selectedHospital, setSelectedHospital] = useState(null);
 
   /* ── Navigation callbacks ────────────────────────────────────────────────── */
@@ -26,7 +30,7 @@ export default function MainLayout({ onLogout }) {
   const handleNavigate = useCallback((pageId) => {
     setActivePage(pageId);
     if (pageId === "dashboard") {
-      setCurrentView("map");
+      setCurrentView("list");
       setSelectedHospital(null);
     }
   }, []);
@@ -36,8 +40,8 @@ export default function MainLayout({ onLogout }) {
     setCurrentView("stats");
   }, []);
 
-  const handleBackToMap = useCallback(() => {
-    setCurrentView("map");
+  const handleBackToList = useCallback(() => {
+    setCurrentView("list");
     setSelectedHospital(null);
   }, []);
 
@@ -47,7 +51,8 @@ export default function MainLayout({ onLogout }) {
       : activePage === "pre_audit" ? "Checklists Pré-Audit"
         : activePage === "capa" ? "Gestion des CAPA"
           : activePage === "inspectors" ? "Inspecteurs"
-            : "Historique";
+            : activePage === "settings" ? "Paramètres du Compte"
+              : "Historique";
 
   const today = new Date().toLocaleDateString("fr-MA", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
@@ -55,88 +60,92 @@ export default function MainLayout({ onLogout }) {
 
   /* ── Render ──────────────────────────────────────────────────────────────── */
   return (
-    <div className="app-layout">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={closeSidebar}
-        activePage={activePage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout}
-      />
+    <AuthProvider>
+      <div className="app-layout">
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
+          activePage={activePage}
+          onNavigate={handleNavigate}
+          onLogout={onLogout}
+        />
 
-      <div className="main-panel">
-        {/* ── Top Bar ──────────────────────────────────────────────────────── */}
-        <header className="topbar">
-          <div className="topbar-left">
-            <button className="topbar-hamburger" onClick={openSidebar} aria-label="Open menu">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <div className="topbar-title-group">
-              <h2 className="topbar-title">{pageTitle}</h2>
-              <span className="topbar-breadcrumb">
-                ACOMED
-                {currentView === "stats" && selectedHospital
-                  ? ` / ${selectedHospital.name}`
-                  : ""}
-              </span>
-            </div>
-          </div>
-
-          <div className="topbar-right">
-            {/* Static data indicator */}
-            <div className="topbar-api-status">
-              <span className="api-status-dot api-status-ok" title="Données statiques (mode démo)" />
-              <span className="topbar-api-label">{HOSPITALS.length} hôpitaux</span>
+        <div className="main-panel">
+          {/* ── Top Bar ──────────────────────────────────────────────────────── */}
+          <header className="topbar">
+            <div className="topbar-left">
+              <button className="topbar-hamburger" onClick={openSidebar} aria-label="Open menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <div className="topbar-title-group">
+                <h2 className="topbar-title">{pageTitle}</h2>
+                <span className="topbar-breadcrumb">
+                  ACOMED
+                  {currentView === "stats" && selectedHospital
+                    ? ` / ${selectedHospital.name}`
+                    : ""}
+                </span>
+              </div>
             </div>
 
-            <span className="topbar-date">{today}</span>
-            <div className="topbar-avatar">A</div>
-          </div>
-        </header>
+            <div className="topbar-right">
+              {/* Static data indicator */}
+              <div className="topbar-api-status">
+                <span className="api-status-dot api-status-ok" title="Données statiques (mode démo)" />
+                <span className="topbar-api-label">{HOSPITALS.length} hôpitaux</span>
+              </div>
 
-        {/* ── Content Area ─────────────────────────────────────────────────── */}
-        <main className="content-area">
-
-          {/* ── Dashboard page ──────────────────────────────────────────────── */}
-          {activePage === "dashboard" && (
-            <>
-              {/* Map view — pass static HOSPITALS list */}
-              {currentView === "map" && (
-                <MapView
-                  onSelectHospital={handleSelectHospital}
-                  hospitals={HOSPITALS}
-                  summaryData={null}
-                />
-              )}
-
-              {/* Stats view */}
-              {currentView === "stats" && selectedHospital && (
-                <StatsView
-                  hospital={selectedHospital}
-                  onBack={handleBackToMap}
-                />
-              )}
-            </>
-          )}
-
-          {/* ── Inspecteurs page ─────────────────────────────────────────────── */}
-          {activePage === "inspectors" && <InspectorsView />}
-
-          {/* ── Pré-Audit placeholder ────────────────────────────────────────── */}
-          {activePage === "pre_audit" && <PreAuditTools />}
-
-          {/* ── CAPA placeholder ──────────────────────────────────────────── */}
-          {activePage === "capa" && (
-            <div className="placeholder-view">
-              <span className="placeholder-icon">🛠️</span>
-              <h2 className="placeholder-title">Gestion des CAPA</h2>
-              <p className="placeholder-text">Tableau Kanban (À faire → En cours → Clôturée) pour le suivi des actions correctives.</p>
+              <span className="topbar-date">{today}</span>
+              <div className="topbar-avatar" onClick={() => handleNavigate("settings")} style={{ cursor: "pointer", transition: "opacity 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"} onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}>A</div>
             </div>
-          )}
-        </main>
+          </header>
+
+          {/* ── Content Area ─────────────────────────────────────────────────── */}
+          <main className="content-area">
+
+            {/* ── Dashboard page (Global Map + Stats) ────────────────────────── */}
+            {activePage === "dashboard" && (
+              <>
+                {/* List view — pass static HOSPITALS list */}
+                {currentView === "list" && (
+                  <FacilitiesList
+                    onSelectHospital={handleSelectHospital}
+                    hospitals={HOSPITALS}
+                  />
+                )}
+
+                {/* Stats view */}
+                {currentView === "stats" && selectedHospital && (
+                  <StatsView
+                    hospital={selectedHospital}
+                    onBack={handleBackToList}
+                  />
+                )}
+              </>
+            )}
+
+            {/* ── Inspecteurs page ─────────────────────────────────────────────── */}
+            {activePage === "inspectors" && <InspectorsView />}
+
+            {/* ── Pré-Audit placeholder ────────────────────────────────────────── */}
+            {activePage === "pre_audit" && <PreAuditTools />}
+
+            {/* ── CAPA page ──────────────────────────────────────────── */}
+            {activePage === "capa" && <CapaBoard darkMode={darkMode} />}
+
+            {/* ── Historique page ──────────────────────────────────────────── */}
+            {activePage === "history" && <AuditsHistory darkMode={darkMode} />}
+
+            {/* ── Users Management page ──────────────────────────────────────────── */}
+            {activePage === "users" && <UsersManagement darkMode={darkMode} />}
+
+            {/* ── Settings page ──────────────────────────────────────────── */}
+            {activePage === "settings" && <AccountSettings />}
+          </main>
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 }

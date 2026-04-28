@@ -1,10 +1,169 @@
 import { useState, useCallback } from "react";
 import { HOSPITALS, getScoreColor, getAccreditationColor } from "../data/hospitalData";
+import { useMockData } from "../context/MockDataContext";
+import { useTheme } from "../context/ThemeContext";
 
+/* ── Inline SVG Icons ──────────────────────────────────────────────────────────── */
+const IcoPlus = (p) => (
+  <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+const IcoX = (p) => (
+  <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 6L6 18M6 6l12 12" />
+  </svg>
+);
+
+/* ── Add Facility Modal ────────────────────────────────────────────────────────── */
+const MODAL_OVERLAY_STYLE = {
+  position: "fixed", inset: 0,
+  backgroundColor: "rgba(0,0,0,0.5)",
+  backdropFilter: "blur(4px)",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  zIndex: 9999,
+};
+
+const MODAL_CARD_STYLE = {
+  width: "100%", maxWidth: "480px",
+  borderRadius: "0.75rem",
+  boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+  padding: "2rem",
+  position: "relative",
+};
+
+const FIELD_LABEL_STYLE = {
+  display: "block", fontSize: "0.75rem",
+  fontWeight: "600", marginBottom: "0.35rem",
+};
+
+const FIELD_INPUT_STYLE = {
+  width: "100%", padding: "0.6rem 0.75rem",
+  borderRadius: "0.5rem", border: "1px solid",
+  fontSize: "0.875rem", outline: "none",
+  transition: "border-color 0.2s",
+  fontFamily: "inherit",
+};
+
+function AddFacilityModal({ isOpen, onClose, onSubmit }) {
+  const [form, setForm] = useState({ name: "", region: "", type: "" });
+
+  const handleChange = (field) => (e) =>
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    onSubmit(form);
+    setForm({ name: "", region: "", type: "" });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  const cardBg = "#ffffff";
+  const inputBg = "#ffffff";
+  const inputBorder = "var(--color-border)";
+  const labelColor = "var(--color-text-secondary)";
+  const textColor = "var(--color-text-primary)";
+
+  return (
+    <div style={MODAL_OVERLAY_STYLE} onClick={onClose}>
+      <div
+        style={{ ...MODAL_CARD_STYLE, backgroundColor: cardBg, color: textColor }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: "1rem", right: "1rem",
+            background: "none", border: "none", cursor: "pointer",
+            color: labelColor, padding: "4px",
+          }}
+        >
+          <IcoX style={{ width: "1.2rem", height: "1.2rem" }} />
+        </button>
+
+        <h2 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "1.5rem" }}>
+          Ajouter un Etablissement
+        </h2>
+
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div>
+            <label style={{ ...FIELD_LABEL_STYLE, color: labelColor }}>Nom *</label>
+            <input
+              style={{ ...FIELD_INPUT_STYLE, backgroundColor: inputBg, borderColor: inputBorder, color: textColor }}
+              value={form.name}
+              onChange={handleChange("name")}
+              placeholder="Ex: Hopital Hassan II"
+              required
+            />
+          </div>
+          <div>
+            <label style={{ ...FIELD_LABEL_STYLE, color: labelColor }}>Region</label>
+            <input
+              style={{ ...FIELD_INPUT_STYLE, backgroundColor: inputBg, borderColor: inputBorder, color: textColor }}
+              value={form.region}
+              onChange={handleChange("region")}
+              placeholder="Ex: Souss-Massa"
+            />
+          </div>
+          <div>
+            <label style={{ ...FIELD_LABEL_STYLE, color: labelColor }}>Type</label>
+            <select
+              style={{ ...FIELD_INPUT_STYLE, backgroundColor: inputBg, borderColor: inputBorder, color: textColor }}
+              value={form.type}
+              onChange={handleChange("type")}
+            >
+              <option value="">Selectionner un type...</option>
+              <option value="Hopital Regional">Hopital Regional</option>
+              <option value="Hopital Prefectoral">Hopital Prefectoral</option>
+              <option value="Polyclinique">Polyclinique</option>
+              <option value="Centre de Sante">Centre de Sante</option>
+              <option value="Clinique Privee">Clinique Privee</option>
+            </select>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: "0.6rem 1.25rem", borderRadius: "0.5rem",
+                border: `1px solid ${inputBorder}`,
+                background: "none", cursor: "pointer",
+                fontSize: "0.875rem", fontWeight: "600",
+                color: labelColor, fontFamily: "inherit",
+              }}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              style={{
+                padding: "0.6rem 1.25rem", borderRadius: "0.5rem",
+                border: "none", background: "#6366f1",
+                color: "white", cursor: "pointer",
+                fontSize: "0.875rem", fontWeight: "600",
+                fontFamily: "inherit",
+              }}
+            >
+              Ajouter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main MapView Component ────────────────────────────────────────────────────── */
 // `hospitals` prop = live API data; falls back to static mock when not provided
 export default function MapView({ hospitals, onSelectHospital }) {
   const displayHospitals = hospitals && hospitals.length > 0 ? hospitals : HOSPITALS;
   const [hoveredId, setHoveredId] = useState(null);
+  const [facilityModalOpen, setFacilityModalOpen] = useState(false);
+  const { addFacility } = useMockData();
 
   const handlePinClick = useCallback(
     (hospital) => onSelectHospital(hospital),
@@ -13,11 +172,21 @@ export default function MapView({ hospitals, onSelectHospital }) {
 
   return (
     <div className="map-view">
-      <div className="map-header">
-        <h1 className="map-title">Carte des Hôpitaux — Agadir</h1>
-        <p className="map-subtitle">
-          Sélectionnez un établissement pour consulter son rapport de conformité
-        </p>
+      <div className="map-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h1 className="map-title">Carte des Hopitaux -- Agadir</h1>
+          <p className="map-subtitle">
+            Selectionnez un etablissement pour consulter son rapport de conformite
+          </p>
+        </div>
+        <button
+          className="inspectors-add-btn"
+          onClick={() => setFacilityModalOpen(true)}
+          style={{ flexShrink: 0 }}
+        >
+          <IcoPlus style={{ width: "1rem", height: "1rem" }} />
+          Ajouter Facility
+        </button>
       </div>
 
       <div className="map-wrapper">
@@ -78,7 +247,7 @@ export default function MapView({ hospitals, onSelectHospital }) {
 
             {/* Ocean label */}
             <text x="140" y="350" className="map-ocean-label" transform="rotate(-75, 140, 350)">
-              Océan Atlantique
+              Ocean Atlantique
             </text>
           </svg>
 
@@ -93,7 +262,7 @@ export default function MapView({ hospitals, onSelectHospital }) {
               onClick={() => handlePinClick(hospital)}
               role="button"
               tabIndex={0}
-              aria-label={`Voir les détails de ${hospital.name}`}
+              aria-label={`Voir les details de ${hospital.name}`}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handlePinClick(hospital); }}
             >
               <span className="map-pin-pulse" />
@@ -117,20 +286,27 @@ export default function MapView({ hospitals, onSelectHospital }) {
                     {hospital.scoreConformite}%
                   </span>
                 </div>
-                <span className="map-pin-card-cta">Cliquez pour les détails →</span>
+                <span className="map-pin-card-cta">Cliquez pour les details</span>
               </div>
             </div>
           ))}
         </div>
 
         <div className="map-legend">
-          <span className="map-legend-title">Légende</span>
-          <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-green" /><span>Score ≥ 85%</span></div>
-          <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-blue" /><span>Score 70–84%</span></div>
-          <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-amber" /><span>Score 50–69%</span></div>
+          <span className="map-legend-title">Legende</span>
+          <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-green" /><span>Score &ge; 85%</span></div>
+          <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-blue" /><span>Score 70-84%</span></div>
+          <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-amber" /><span>Score 50-69%</span></div>
           <div className="map-legend-item"><span className="map-legend-dot map-legend-dot-red" /><span>Score &lt; 50%</span></div>
         </div>
       </div>
+
+      {/* ── Add Facility Modal ── */}
+      <AddFacilityModal
+        isOpen={facilityModalOpen}
+        onClose={() => setFacilityModalOpen(false)}
+        onSubmit={addFacility}
+      />
     </div>
   );
 }
