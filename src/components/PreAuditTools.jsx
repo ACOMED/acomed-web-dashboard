@@ -15,17 +15,20 @@ const FACILITIES = [
 const INSPECTORS = [
   { id: 'i1', name: 'Isabelle Bernard' },
   { id: 'i2', name: 'Ayman ligassi ' },
-  { id: 'i2', name: 'Samuel Dupuis' }
+  { id: 'i3', name: 'Samuel Dupuis' }
 ];
 
 let _counter = 0;
 const genId = () => `pnode_${Date.now()}_${++_counter}`;
 
-const createNode = () => ({
+const createNode = (triggerCondition = null) => ({
   id: genId(),
   title: "",
   description: "",
   answer_type: "BOOLEAN",
+  trigger_condition: triggerCondition,
+  require_photo: false,
+  require_note: false,
   children: [],
 });
 
@@ -85,6 +88,21 @@ const Ico = {
       <path d="M9 14l2 2 4-4"></path>
     </svg>
   ),
+  Camera: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  ),
+  FileText: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <line x1="10" y1="9" x2="8" y2="9" />
+    </svg>
+  ),
 };
 
 const TYPE_META = {
@@ -104,7 +122,6 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
   const childRowRef = useRef(null);
   const [svgLines, setSvgLines] = useState([]);
 
-  // Calculate SVG branch lines instantly (WITH INFINITE LOOP FIX)
   useLayoutEffect(() => {
     if (!portRef.current || !childRowRef.current || !hasChildren) {
       setSvgLines(prev => prev.length === 0 ? prev : []);
@@ -122,14 +139,29 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
       const sy = portRect.bottom - rowRect.top;
       const tx = cardRect.left + cardRect.width / 2 - rowRect.left;
       const ty = cardRect.top - rowRect.top;
-      const my = sy + (ty - sy) * 0.45; // elbow drop
+      const my = sy + (ty - sy) * 0.45;
 
       calculatedLines.push({ sx, sy, mx: sx, my, tx, ty });
     });
 
     setSvgLines(prev => JSON.stringify(prev) === JSON.stringify(calculatedLines) ? prev : calculatedLines);
-
   }, [hasChildren, node.children]);
+
+  const triggerBadge = !isRoot && node.trigger_condition ? (
+    <span style={{
+      fontSize: "0.65rem",
+      fontWeight: 800,
+      padding: "0.2rem 0.6rem",
+      borderRadius: "9999px",
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+      ...(node.trigger_condition === 'OUI'
+        ? { color: "#065f46", background: "#d1fae5", border: "1px solid #a7f3d0" }
+        : { color: "#991b1b", background: "#fee2e2", border: "1px solid #fecaca" })
+    }}>
+      IF {node.trigger_condition}
+    </span>
+  ) : null;
 
   return (
     <div className="pa-node-wrap">
@@ -138,9 +170,48 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
         <div style={{ height: "4px", width: "100%", background: meta.color }} />
 
         <div className="pa-node-header">
-          <span className="pa-node-badge" style={{ color: meta.color, background: meta.bg }}>
-            {meta.label}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", flex: 1 }}>
+            <span className="pa-node-badge" style={{ color: meta.color, background: meta.bg }}>
+              {meta.label}
+            </span>
+            {triggerBadge}
+
+            {/* ── NEW: Evidence Required Indicators ── */}
+            <div style={{ display: "flex", gap: "4px", marginLeft: "auto" }}>
+              {node.require_photo && (
+                <span title="L'auditeur doit ajouter une Photo ici" style={{
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#10b981",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "2px"
+                }}>
+                  <Ico.Camera style={{ width: "10px", height: "10px" }} />
+                  Photo
+                </span>
+              )}
+              {node.require_note && (
+                <span title="L'auditeur doit ajouter une Note ici" style={{
+                  background: "rgba(59, 130, 246, 0.15)",
+                  color: "#3b82f6",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "2px"
+                }}>
+                  <Ico.FileText style={{ width: "10px", height: "10px" }} />
+                  Note
+                </span>
+              )}
+            </div>
+          </div>
           <button className="pa-node-del" onClick={() => onDelete(node.id)} title="Supprimer">
             <Ico.Trash style={{ width: "0.8rem", height: "0.8rem" }} />
           </button>
@@ -172,27 +243,85 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
               onChange={(e) => onUpdate(node.id, { answer_type: e.target.value })}
               style={{ color: meta.color, borderColor: `${meta.color}55`, background: meta.bg }}
             >
-              <option value="BOOLEAN">✅ OUI / NON</option>
-              <option value="TEXT">📝 TEXTE</option>
-              <option value="PHOTO">📷 PHOTO</option>
+              <option value="BOOLEAN">OUI / NON</option>
+              <option value="TEXT">TEXTE</option>
+              <option value="PHOTO">PHOTO</option>
             </select>
+          </div>
+
+          {/* Trigger Condition Dropdown for non-root nodes */}
+          {!isRoot && (
+            <div style={{ marginTop: "0.5rem" }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: "600", color: "#64748b", marginBottom: "0.25rem" }}>
+                Condition de déclenchement
+              </div>
+              <select
+                className="pa-select-type"
+                value={node.trigger_condition || ""}
+                onChange={(e) => onUpdate(node.id, { trigger_condition: e.target.value || null })}
+                style={{ fontSize: "0.75rem", padding: "0.3rem 0.5rem", color: "#475569", borderColor: "#cbd5e1", background: "#f8fafc" }}
+              >
+                <option value="">Aucune</option>
+                <option value="OUI">Si réponse est OUI</option>
+                <option value="NON">Si réponse est NON</option>
+              </select>
+            </div>
+          )}
+
+          {/* Evidence Requirements */}
+          <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px dashed #e2e8f0" }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>
+              Evidence Requise
+            </div>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", color: "#475569", cursor: "pointer", fontWeight: 500 }}>
+                <input
+                  type="checkbox"
+                  checked={node.require_photo}
+                  onChange={(e) => onUpdate(node.id, { require_photo: e.target.checked })}
+                  style={{ accentColor: "#10b981", width: "14px", height: "14px", cursor: "pointer" }}
+                />
+                <Ico.Camera style={{ width: "14px", height: "14px", color: "#64748b" }} />
+                Photo
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", color: "#475569", cursor: "pointer", fontWeight: 500 }}>
+                <input
+                  type="checkbox"
+                  checked={node.require_note}
+                  onChange={(e) => onUpdate(node.id, { require_note: e.target.checked })}
+                  style={{ accentColor: "#3b82f6", width: "14px", height: "14px", cursor: "pointer" }}
+                />
+                <Ico.FileText style={{ width: "14px", height: "14px", color: "#64748b" }} />
+                Note
+              </label>
+            </div>
           </div>
         </div>
 
         {/* 3. CONDITIONAL BRANCHING GENERATOR */}
         <div className="pa-node-footer">
           {node.answer_type === "BOOLEAN" ? (
-            <button
-              ref={portRef}
-              className="pa-btn-branch"
-              onClick={() => onAddChild(node.id)}
-            >
-              <Ico.Branch style={{ width: "0.8rem", height: "0.8rem" }} />
-              + Add Conditional Follow-up
-            </button>
+            <div ref={portRef} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", width: "100%" }}>
+              <button
+                className="pa-btn-branch"
+                onClick={() => onAddChild(node.id, 'OUI')}
+                style={{ flex: 1, justifyContent: "center" }}
+              >
+                <Ico.Branch style={{ width: "0.8rem", height: "0.8rem" }} />
+                + Condition (OUI)
+              </button>
+              <button
+                className="pa-btn-branch"
+                onClick={() => onAddChild(node.id, 'NON')}
+                style={{ flex: 1, justifyContent: "center" }}
+              >
+                <Ico.Branch style={{ width: "0.8rem", height: "0.8rem" }} />
+                + Condition (NON)
+              </button>
+            </div>
           ) : (
             <div ref={portRef} className="pa-terminal">
-              ⬤ Fin de l'étape
+              Fin de l'etape
             </div>
           )}
         </div>
@@ -201,24 +330,45 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
       {/* 4. RECURSIVE VISUAL RENDERING */}
       {hasChildren && (
         <div className="pa-children-container" ref={childRowRef}>
-          {/* SVG FLOW LINES WITH "⚡ IF YES" BADGE */}
           <svg className="pa-svg-overlay">
             <defs>
-              <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <marker id="arrow-yes" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
                 <path d="M0,0 L0,8 L8,4 z" fill="#10b981" opacity="0.8" />
+              </marker>
+              <marker id="arrow-no" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M0,0 L0,8 L8,4 z" fill="#ef4444" opacity="0.8" />
+              </marker>
+              <marker id="arrow-neutral" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M0,0 L0,8 L8,4 z" fill="#9ca3af" opacity="0.8" />
               </marker>
             </defs>
             {svgLines.map((l, i) => {
+              const condition = node.children[i]?.trigger_condition;
               const path = `M ${l.sx} ${l.sy} C ${l.sx} ${l.my}, ${l.tx} ${l.my}, ${l.tx} ${l.ty}`;
               const lx = (l.sx + l.tx) / 2;
               const ly = (l.sy + l.ty) / 2;
+
+              if (condition === 'OUI') {
+                return (
+                  <g key={i}>
+                    <path d={path} stroke="#10b981" strokeWidth="2" fill="none" strokeDasharray="6 3" opacity="0.6" markerEnd="url(#arrow-yes)" />
+                    <rect x={lx - 28} y={ly - 10} width={56} height={20} rx={10} fill="#d1fae5" stroke="#10b981" strokeWidth="1.2" />
+                    <text x={lx} y={ly + 4} textAnchor="middle" fontSize="9" fontWeight="800" fill="#065f46" fontFamily="Inter, sans-serif">IF OUI</text>
+                  </g>
+                );
+              }
+              if (condition === 'NON') {
+                return (
+                  <g key={i}>
+                    <path d={path} stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="6 3" opacity="0.6" markerEnd="url(#arrow-no)" />
+                    <rect x={lx - 28} y={ly - 10} width={56} height={20} rx={10} fill="#fee2e2" stroke="#ef4444" strokeWidth="1.2" />
+                    <text x={lx} y={ly + 4} textAnchor="middle" fontSize="9" fontWeight="800" fill="#991b1b" fontFamily="Inter, sans-serif">IF NON</text>
+                  </g>
+                );
+              }
               return (
                 <g key={i}>
-                  <path d={path} stroke="#10b981" strokeWidth="2" fill="none" strokeDasharray="6 3" opacity="0.6" markerEnd="url(#arrow)" />
-                  <rect x={lx - 28} y={ly - 10} width={56} height={20} rx={10} fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.2" />
-                  <text x={lx} y={ly + 4} textAnchor="middle" fontSize="9" fontWeight="800" fill="#92400e" fontFamily="Inter, sans-serif">
-                    ⚡ IF YES
-                  </text>
+                  <path d={path} stroke="#9ca3af" strokeWidth="2" fill="none" strokeDasharray="6 3" opacity="0.6" markerEnd="url(#arrow-neutral)" />
                 </g>
               );
             })}
@@ -247,13 +397,11 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
    MAIN COMPONENT & STATE TREE CONFIG
    ═══════════════════════════════════════════════════════════════════ */
 export default function PreAuditTools() {
-  const [guideName, setGuideName] = useState("Guide HACCP Préparation");
+  const [guideName, setGuideName] = useState("Guide HACCP Preparation");
 
-  // REAL-TIME STATE SYNC BASE
   const [nodes, setNodes] = useState([]);
   const [saveStatus, setSaveStatus] = useState("idle");
 
-  // NEW: MISSION ASSIGNMENT STATE
   const [missionData, setMissionData] = useState({
     facilityId: "",
     inspectorId: "",
@@ -264,8 +412,8 @@ export default function PreAuditTools() {
     setNodes((prev) => [...prev, createNode()]);
   }, []);
 
-  const handleAddChildNode = useCallback((parentId) => {
-    setNodes((prev) => addChildToNode(prev, parentId, createNode()));
+  const handleAddChildNode = useCallback((parentId, condition) => {
+    setNodes((prev) => addChildToNode(prev, parentId, createNode(condition)));
   }, []);
 
   const handleUpdateNode = useCallback((id, patch) => {
@@ -279,7 +427,6 @@ export default function PreAuditTools() {
   const handleSave = useCallback(async () => {
     setSaveStatus("saving");
 
-    // NEW: CONSTRUCT MERGED PAYLOAD
     const finalPayload = {
       guideName,
       mission: missionData,
@@ -293,21 +440,53 @@ export default function PreAuditTools() {
     }, 1500);
   }, [nodes, guideName, missionData]);
 
+  const primaryBtnStyle = {
+    background: "linear-gradient(135deg, #10b981, #059669)",
+    color: "white",
+    borderRadius: "10px",
+    boxShadow: "0 4px 14px rgba(16, 185, 129, 0.3)",
+    border: "none",
+    fontWeight: "bold",
+    padding: "10px 18px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
+    opacity: saveStatus === "saving" ? 0.7 : 1,
+    transition: "all 0.2s ease",
+    fontSize: "0.875rem",
+    fontFamily: "inherit",
+  };
+
   return (
     <div className="pa-builder-view" style={{ display: "block", height: "auto", overflowY: "auto", paddingBottom: "2rem" }}>
       <div className="pa-builder-header">
         <div>
           <h1 className="pa-builder-title">
             <Ico.ClipboardCheck style={{ width: "1.5rem", height: "1.5rem", marginRight: "0.5rem", color: "#3b82f6" }} />
-            Outils Pré-Audit - Workflow Builder
+            Outils Pre-Audit - Workflow Builder
           </h1>
           <p className="pa-builder-subtitle">
-            Synchronisation des nœuds en temps réel (Auto-Save JSON Data Tree)
+            Synchronisation des noeuds en temps reel (Auto-Save JSON Data Tree)
           </p>
         </div>
-        <button className="pa-btn-save" onClick={handleSave} disabled={saveStatus === "saving"}>
+        <button
+          onClick={handleSave}
+          disabled={saveStatus === "saving"}
+          style={primaryBtnStyle}
+          onMouseEnter={(e) => {
+            if (saveStatus !== "saving") {
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.45)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.3)";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+        >
           <Ico.Save style={{ width: "0.9rem", height: "0.9rem" }} />
-          {saveStatus === "saving" ? "Sauvegarde..." : "Enregistrer la Base"}
+          {saveStatus === "saving" ? "Sauvegarde..." : saveStatus === "success" ? "Enregistre !" : "Sauvegarder le Template"}
         </button>
       </div>
 
@@ -326,12 +505,11 @@ export default function PreAuditTools() {
         </button>
       </div>
 
-      {/* 2. CANVAS BREATHING ROOM: minHeight: "65vh" */}
       <div className="pa-builder-canvas" style={{ minHeight: "65vh", overflow: "visible" }}>
         {nodes.length === 0 ? (
           <div className="pa-empty-state">
             <Ico.ClipboardCheck style={{ width: "3.5rem", height: "3.5rem", opacity: 0.2 }} />
-            <span>Le Workflow de préparation est vide. Ajoutez la première étape pour commencer.</span>
+            <span>Le Workflow de preparation est vide. Ajoutez la premiere etape pour commencer.</span>
           </div>
         ) : (
           <div className="pa-root-nodes">
@@ -350,13 +528,37 @@ export default function PreAuditTools() {
         )}
       </div>
 
-      {/* 3. & 4. CLEAR SEPARATION & MISSION CARD ELEVATION */}
+      {/* Bottom Save Bar */}
+      {nodes.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem", marginBottom: "1rem" }}>
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === "saving"}
+            style={{ ...primaryBtnStyle, padding: "12px 28px", fontSize: "1rem" }}
+            onMouseEnter={(e) => {
+              if (saveStatus !== "saving") {
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(16, 185, 129, 0.45)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.3)";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
+          >
+            <Ico.Save style={{ width: "1rem", height: "1rem" }} />
+            {saveStatus === "saving" ? "Compilation JSON..." : "Sauvegarder le Template"}
+          </button>
+        </div>
+      )}
+
+      {/* Mission Assignment Card */}
       <div style={{
         marginTop: "3rem",
         marginBottom: "2rem",
         marginLeft: "2rem",
         marginRight: "2rem",
-        backgroundColor: "white", /* Hardcoded visually distinct card per requirements */
+        backgroundColor: "white",
         borderRadius: "0.75rem",
         boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)",
         padding: "2rem"
@@ -368,14 +570,14 @@ export default function PreAuditTools() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
           <div>
-            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Établissement (Facility)</label>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Etablissement (Facility)</label>
             <select
               className="pa-toolbar-input"
               style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem" }}
               value={missionData.facilityId}
               onChange={(e) => setMissionData(p => ({ ...p, facilityId: e.target.value }))}
             >
-              <option value="">Sélectionner un établissement...</option>
+              <option value="">Selectionner un etablissement...</option>
               {FACILITIES.map(f => (
                 <option key={f.id} value={f.id}>{f.name}</option>
               ))}
@@ -390,7 +592,7 @@ export default function PreAuditTools() {
               value={missionData.inspectorId}
               onChange={(e) => setMissionData(p => ({ ...p, inspectorId: e.target.value }))}
             >
-              <option value="">Sélectionner un inspecteur...</option>
+              <option value="">Selectionner un inspecteur...</option>
               {INSPECTORS.map(i => (
                 <option key={i.id} value={i.id}>{i.name}</option>
               ))}
@@ -398,7 +600,7 @@ export default function PreAuditTools() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Date Planifiée</label>
+            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", color: "#64748b", marginBottom: "0.5rem" }}>Date Planifiee</label>
             <input
               type="datetime-local"
               className="pa-toolbar-input"

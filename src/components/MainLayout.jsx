@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import FacilitiesList from "./FacilitiesList";
-import StatsView from "./StatsView";
+import DashboardOverview from "./DashboardOverview";
 import InspectorsView from "./InspectorsView";
 import { useTheme } from "../context/ThemeContext";
-import { HOSPITALS, NATIONAL_AVERAGE } from "../data/hospitalData";
+import { HOSPITALS } from "../data/hospitalData";
 import PreAuditTools from './PreAuditTools';
 import CapaBoard from "./CapaBoard";
 import AuditsHistory from "./AuditsHistory";
@@ -58,6 +58,23 @@ export default function MainLayout({ onLogout }) {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
+  const primaryBtnStyle = {
+    background: "linear-gradient(135deg, #10b981, #059669)",
+    color: "white",
+    borderRadius: "10px",
+    boxShadow: "0 4px 14px rgba(16, 185, 129, 0.3)",
+    border: "none",
+    padding: "10px 16px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    fontSize: "13px",
+    fontFamily: "inherit",
+    transition: "all 0.2s ease",
+  };
+
   /* ── Render ──────────────────────────────────────────────────────────────── */
   return (
     <AuthProvider>
@@ -105,7 +122,7 @@ export default function MainLayout({ onLogout }) {
           {/* ── Content Area ─────────────────────────────────────────────────── */}
           <main className="content-area">
 
-            {/* ── Dashboard page (Global Map + Stats) ────────────────────────── */}
+            {/* ── Dashboard page (Facilities List + Graphs) ──────────────────── */}
             {activePage === "dashboard" && (
               <>
                 {/* List view — pass static HOSPITALS list */}
@@ -116,12 +133,30 @@ export default function MainLayout({ onLogout }) {
                   />
                 )}
 
-                {/* Stats view */}
+                {/* Graphs / Stats view */}
                 {currentView === "stats" && selectedHospital && (
-                  <StatsView
-                    hospital={selectedHospital}
-                    onBack={handleBackToList}
-                  />
+                  <div>
+                    <div style={{ marginBottom: "16px" }}>
+                      <button
+                        onClick={handleBackToList}
+                        style={primaryBtnStyle}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.45)";
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.3)";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M19 12H5m0 0l7 7m-7-7l7-7" />
+                        </svg>
+                        Retour
+                      </button>
+                    </div>
+                    <DashboardOverview hospital={selectedHospital} />
+                  </div>
                 )}
               </>
             )}

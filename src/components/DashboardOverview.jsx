@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 /* ═══════════════════════════════════════════════════════════════════
-   MOCK DATA — ACOMED V2.0 BACKEND SCHEMA MATCH
+   BASE MOCK DATA — ACOMED V2.0 BACKEND SCHEMA MATCH
    ═══════════════════════════════════════════════════════════════════ */
 const MOCK_V2_DATA = {
   tenant: {
@@ -235,14 +235,7 @@ const CircularGauge = ({ value, color = "var(--accent-emerald)", size = 170, str
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block" }}>
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
-        fill="none"
-        stroke="var(--border-color)"
-        strokeWidth={strokeWidth}
-      />
+      <circle cx={center} cy={center} r={radius} fill="none" stroke="var(--border-color)" strokeWidth={strokeWidth} />
       <circle
         cx={center}
         cy={center}
@@ -255,16 +248,7 @@ const CircularGauge = ({ value, color = "var(--accent-emerald)", size = 170, str
         transform={`rotate(-90 ${center} ${center})`}
         style={{ transition: "stroke-dasharray 1.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
       />
-      <text
-        x={center}
-        y={center}
-        textAnchor="middle"
-        dy="0.35em"
-        fill="var(--text-primary)"
-        fontSize="32"
-        fontWeight="800"
-        fontFamily="Inter, system-ui, sans-serif"
-      >
+      <text x={center} y={center} textAnchor="middle" dy="0.35em" fill="var(--text-primary)" fontSize="32" fontWeight="800" fontFamily="Inter, system-ui, sans-serif">
         {value}%
       </text>
     </svg>
@@ -278,6 +262,8 @@ const RadarChart = ({ data }) => {
   const n = data.length;
   const levels = 5;
 
+  if (n === 0) return null;
+
   const getPoint = (value, index, maxR = r) => {
     const angle = -Math.PI / 2 + (index * 2 * Math.PI) / n;
     const radius = (value / 100) * maxR;
@@ -290,21 +276,17 @@ const RadarChart = ({ data }) => {
   const gridPolys = [];
   for (let i = 1; i <= levels; i++) {
     const levelValue = (i / levels) * 100;
-    const points = data
-      .map((_, idx) => {
-        const p = getPoint(levelValue, idx);
-        return `${p.x},${p.y}`;
-      })
-      .join(" ");
+    const points = data.map((_, idx) => {
+      const p = getPoint(levelValue, idx);
+      return `${p.x},${p.y}`;
+    }).join(" ");
     gridPolys.push(points);
   }
 
-  const dataPoints = data
-    .map((item, idx) => {
-      const p = getPoint(item.score, idx);
-      return `${p.x},${p.y}`;
-    })
-    .join(" ");
+  const dataPoints = data.map((item, idx) => {
+    const p = getPoint(item.score, idx);
+    return `${p.x},${p.y}`;
+  }).join(" ");
 
   const axes = data.map((_, idx) => {
     const p = getPoint(100, idx);
@@ -324,29 +306,13 @@ const RadarChart = ({ data }) => {
       {axes.map((axis, i) => (
         <line key={`axis-${i}`} x1={axis.x1} y1={axis.y1} x2={axis.x2} y2={axis.y2} stroke="var(--border-color)" strokeWidth="1" />
       ))}
-      <polygon
-        points={dataPoints}
-        fill="var(--kpi-blue-bg-medium)"
-        stroke="var(--accent-blue)"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-      />
+      <polygon points={dataPoints} fill="var(--kpi-blue-bg-medium)" stroke="var(--accent-blue)" strokeWidth="2.5" strokeLinejoin="round" />
       {data.map((item, idx) => {
         const p = getPoint(item.score, idx);
         return <circle key={`dot-${idx}`} cx={p.x} cy={p.y} r="4" fill="var(--accent-blue)" stroke="var(--bg-card)" strokeWidth="2" />;
       })}
       {labels.map((l, idx) => (
-        <text
-          key={`label-${idx}`}
-          x={l.x}
-          y={l.y}
-          textAnchor="middle"
-          dy="0.35em"
-          fill="var(--text-secondary)"
-          fontSize="10"
-          fontWeight="600"
-          fontFamily="Inter, system-ui, sans-serif"
-        >
+        <text key={`label-${idx}`} x={l.x} y={l.y} textAnchor="middle" dy="0.35em" fill="var(--text-secondary)" fontSize="10" fontWeight="600" fontFamily="Inter, system-ui, sans-serif">
           {l.text}
         </text>
       ))}
@@ -395,7 +361,6 @@ const cssVars = `
     --kpi-emerald-bg: rgba(16, 185, 129, 0.08);
   }
 
-  /* Support for global .dark class toggle */
   :global(.dark) .dashboard-overview-container,
   .dark .dashboard-overview-container,
   .dashboard-overview-container.dark {
@@ -435,8 +400,39 @@ const cssVars = `
 /* ═══════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════ */
-export default function DashboardOverview() {
-  const { tenant, doubleScore, kpis, audits, capas } = MOCK_V2_DATA;
+export default function DashboardOverview({ hospital }) {
+  // هادي هي البلاصة الصحيحة ديال useMemo لداخل ديال المكون
+  const data = useMemo(() => {
+    if (!hospital || hospital.isNew) {
+      return {
+        tenant: { name: hospital?.name || "Nouvel Établissement" },
+        doubleScore: { compliance: 0, maturity: 0, maturityBreakdown: [] },
+        kpis: { totalAudits: 0, openCapas: 0, criticalNonConformities: 0, overdueCapas: 0 },
+        audits: [],
+        capas: [],
+      };
+    }
+
+    return {
+      tenant: { name: hospital.name },
+      doubleScore: {
+        compliance: hospital.scoreConformite || 0,
+        maturity: hospital.scoreMaturite || 0,
+        maturityBreakdown: MOCK_V2_DATA.doubleScore.maturityBreakdown,
+      },
+      kpis: {
+        totalAudits: 14, // رقم تقريبي
+        openCapas: hospital.capaOuvertes || 0,
+        criticalNonConformities: hospital.ncMajeures || 0,
+        overdueCapas: 2, // رقم تقريبي
+      },
+      audits: MOCK_V2_DATA.audits,
+      capas: MOCK_V2_DATA.capas,
+    };
+  }, [hospital]);
+
+  // حالة باش نعرفو واش السبيطار خاوي ولا فيه داتا
+  const isEmpty = data.kpis.totalAudits === 0 && data.doubleScore.compliance === 0;
 
   const cardBase = {
     backgroundColor: "var(--bg-card)",
@@ -467,6 +463,14 @@ export default function DashboardOverview() {
     lineHeight: 1,
   };
 
+  const emptyStateStyle = {
+    padding: "40px 20px",
+    textAlign: "center",
+    color: "var(--text-muted)",
+    fontSize: "14px",
+    fontWeight: 600,
+  };
+
   return (
     <div
       className="dashboard-overview-container"
@@ -482,37 +486,14 @@ export default function DashboardOverview() {
 
       {/* ── HEADER ── */}
       <div style={{ marginBottom: "28px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            marginBottom: "6px",
-            color: "var(--text-secondary)",
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", color: "var(--text-secondary)" }}>
           <IconBuilding />
-          <span
-            style={{
-              fontSize: "12px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-            }}
-          >
+          <span style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Tenant Workspace
           </span>
         </div>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "28px",
-            fontWeight: 800,
-            letterSpacing: "-0.025em",
-            color: "var(--text-primary)",
-          }}
-        >
-          {tenant.name}
+        <h1 style={{ margin: 0, fontSize: "28px", fontWeight: 800, letterSpacing: "-0.025em", color: "var(--text-primary)" }}>
+          {data.tenant.name}
         </h1>
         <p style={{ margin: "6px 0 0", fontSize: "14px", color: "var(--text-secondary)" }}>
           ACOMED V2.0 Dashboard Overview
@@ -520,332 +501,139 @@ export default function DashboardOverview() {
       </div>
 
       {/* ── TOP SECTION: DOUBLE SCORE ── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "20px",
-          marginBottom: "24px",
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px", marginBottom: "24px" }}>
         {/* Compliance */}
         <div style={cardBase}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "8px",
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--kpi-emerald-bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--accent-emerald)",
-                }}
-              >
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", backgroundColor: "var(--kpi-emerald-bg)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-emerald)" }}>
                 <IconShield />
               </div>
               <h2 style={sectionTitle}>Compliance Score</h2>
             </div>
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "var(--accent-emerald)",
-                backgroundColor: "var(--kpi-emerald-bg)",
-                padding: "4px 10px",
-                borderRadius: "8px",
-              }}
-            >
-              +2.4%
-            </span>
+            {!isEmpty && (
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-emerald)", backgroundColor: "var(--kpi-emerald-bg)", padding: "4px 10px", borderRadius: "8px" }}>
+                +2.4%
+              </span>
+            )}
           </div>
           <p style={{ margin: "0 0 20px", fontSize: "13px", color: "var(--text-secondary)" }}>
             Regulatory & Normative Adherence
           </p>
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <CircularGauge value={doubleScore.compliance} color="var(--accent-emerald)" />
+            <CircularGauge value={data.doubleScore.compliance} color="var(--accent-emerald)" />
           </div>
         </div>
 
         {/* Maturity */}
         <div style={cardBase}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "8px",
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--kpi-blue-bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--accent-blue)",
-                }}
-              >
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", backgroundColor: "var(--kpi-blue-bg)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-blue)" }}>
                 <IconActivity />
               </div>
               <h2 style={sectionTitle}>Maturity Score</h2>
             </div>
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "var(--accent-blue)",
-                backgroundColor: "var(--kpi-blue-bg)",
-                padding: "4px 10px",
-                borderRadius: "8px",
-              }}
-            >
-              {doubleScore.maturity}%
-            </span>
+            {!isEmpty && (
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-blue)", backgroundColor: "var(--kpi-blue-bg)", padding: "4px 10px", borderRadius: "8px" }}>
+                {data.doubleScore.maturity}%
+              </span>
+            )}
           </div>
           <p style={{ margin: "0 0 12px", fontSize: "13px", color: "var(--text-secondary)" }}>
             Process Quality & Operational Excellence
           </p>
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <RadarChart data={doubleScore.maturityBreakdown} />
+            {data.doubleScore.maturityBreakdown.length > 0 ? (
+              <RadarChart data={data.doubleScore.maturityBreakdown} />
+            ) : (
+              <div style={{ height: "210px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px", fontWeight: 600 }}>
+                Aucune donnée disponible pour cet établissement
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* ── MIDDLE SECTION: OPERATIONAL KPIs ── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" }}>
         {[
-          {
-            label: "Total Audits",
-            value: kpis.totalAudits,
-            icon: <IconFileText />,
-            color: "var(--accent-blue)",
-            bg: "var(--kpi-blue-bg)",
-            trend: "+8 vs last month",
-          },
-          {
-            label: "Open CAPAs",
-            value: kpis.openCapas,
-            icon: <IconClock />,
-            color: "var(--accent-amber)",
-            bg: "var(--kpi-amber-bg)",
-            trend: "3 new this week",
-          },
-          {
-            label: "Critical NCs",
-            value: kpis.criticalNonConformities,
-            icon: <IconAlertTriangle />,
-            color: "var(--accent-red)",
-            bg: "var(--kpi-red-bg)",
-            trend: "Requires action",
-          },
-          {
-            label: "Overdue CAPAs",
-            value: kpis.overdueCapas,
-            icon: <IconTrendingUp />,
-            color: "var(--accent-orange)",
-            bg: "var(--kpi-orange-bg)",
-            trend: "-2 resolved",
-          },
+          { label: "Total Audits", value: data.kpis.totalAudits, icon: <IconFileText />, color: "var(--accent-blue)", bg: "var(--kpi-blue-bg)", trend: isEmpty ? "" : "+8 vs last month" },
+          { label: "Open CAPAs", value: data.kpis.openCapas, icon: <IconClock />, color: "var(--accent-amber)", bg: "var(--kpi-amber-bg)", trend: isEmpty ? "" : "3 new this week" },
+          { label: "Critical NCs", value: data.kpis.criticalNonConformities, icon: <IconAlertTriangle />, color: "var(--accent-red)", bg: "var(--kpi-red-bg)", trend: isEmpty ? "" : "Requires action" },
+          { label: "Overdue CAPAs", value: data.kpis.overdueCapas, icon: <IconTrendingUp />, color: "var(--accent-orange)", bg: "var(--kpi-orange-bg)", trend: isEmpty ? "" : "-2 resolved" },
         ].map((kpi, i) => (
           <div
             key={i}
-            style={{
-              ...cardBase,
-              padding: "24px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "16px",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              cursor: "default",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 14px 32px var(--shadow-hover)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 10px 26px var(--shadow-color)";
-            }}
+            style={{ ...cardBase, padding: "24px", display: "flex", alignItems: "flex-start", gap: "16px", transition: "transform 0.2s ease, box-shadow 0.2s ease", cursor: "default" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 14px 32px var(--shadow-hover)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 10px 26px var(--shadow-color)"; }}
           >
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                backgroundColor: kpi.bg,
-                color: kpi.color,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
+            <div style={{ width: "44px", height: "44px", borderRadius: "12px", backgroundColor: kpi.bg, color: kpi.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               {kpi.icon}
             </div>
             <div>
-              <p style={{ margin: "0 0 4px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: 600 }}>
-                {kpi.label}
-              </p>
-              <p style={{ margin: 0, fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
-                {kpi.value}
-              </p>
-              <p style={{ margin: "6px 0 0", fontSize: "12px", color: kpi.color, fontWeight: 700 }}>
-                {kpi.trend}
-              </p>
+              <p style={{ margin: "0 0 4px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: 600 }}>{kpi.label}</p>
+              <p style={{ margin: 0, fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>{kpi.value}</p>
+              {!isEmpty && <p style={{ margin: "6px 0 0", fontSize: "12px", color: kpi.color, fontWeight: 700 }}>{kpi.trend}</p>}
             </div>
           </div>
         ))}
       </div>
 
       {/* ── BOTTOM SECTION: AUDITS + CAPA ── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-          gap: "20px",
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
+
         {/* Recent Audits */}
         <div style={cardBase}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "20px",
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <h2 style={sectionTitle}>Recent Audits</h2>
-            <a
-              href="#"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "var(--accent-blue)",
-                textDecoration: "none",
-                transition: "opacity 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-            >
-              View All <IconChevronRight />
-            </a>
+            {!isEmpty && (
+              <a href="#" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", fontWeight: 700, color: "var(--accent-blue)", textDecoration: "none", transition: "opacity 0.15s ease" }}>
+                View All <IconChevronRight />
+              </a>
+            )}
           </div>
-
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
               <thead>
                 <tr>
                   {["Audit ID", "Facility", "Status", "Score"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        color: "var(--text-secondary)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        borderBottom: "1px solid var(--border-color)",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <th key={h} style={{ textAlign: "left", padding: "10px 12px", fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", borderBottom: "1px solid var(--border-color)", whiteSpace: "nowrap" }}>
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {audits.map((audit) => {
-                  const meta = getAuditStatusMeta(audit.status);
-                  return (
-                    <tr
-                      key={audit.id}
-                      style={{
-                        transition: "background-color 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-hover)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                    >
-                      <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
-                        <span
-                          style={{
-                            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            color: "var(--accent-blue)",
-                          }}
-                        >
-                          {audit.id}
-                        </span>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
-                          {audit.inspector}
-                        </div>
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          color: "var(--text-table)",
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {audit.facility}
-                      </td>
-                      <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
-                        <span
-                          style={{
-                            ...badgeBase,
-                            backgroundColor: meta.bg,
-                            color: meta.color,
-                            borderColor: meta.border,
-                          }}
-                        >
-                          {meta.label}
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
-                        {audit.score != null ? (
-                          <span
-                            style={{
-                              fontWeight: 800,
-                              color: audit.score >= 80 ? "var(--accent-emerald)" : audit.score >= 60 ? "var(--accent-amber)" : "var(--accent-red)",
-                            }}
-                          >
-                            {audit.score}%
-                          </span>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {data.audits.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={emptyStateStyle}>Aucune donnée disponible pour cet établissement</td>
+                  </tr>
+                ) : (
+                  data.audits.map((audit) => {
+                    const meta = getAuditStatusMeta(audit.status);
+                    return (
+                      <tr key={audit.id} style={{ transition: "background-color 0.15s ease" }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-hover)")} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}>
+                        <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
+                          <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "12px", fontWeight: 700, color: "var(--accent-blue)" }}>{audit.id}</span>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>{audit.inspector}</div>
+                        </td>
+                        <td style={{ padding: "12px", color: "var(--text-table)", fontWeight: 600, whiteSpace: "nowrap" }}>{audit.facility}</td>
+                        <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
+                          <span style={{ ...badgeBase, backgroundColor: meta.bg, color: meta.color, borderColor: meta.border }}>{meta.label}</span>
+                        </td>
+                        <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
+                          {audit.score != null ? (
+                            <span style={{ fontWeight: 800, color: audit.score >= 80 ? "var(--accent-emerald)" : audit.score >= 60 ? "var(--accent-amber)" : "var(--accent-red)" }}>{audit.score}%</span>
+                          ) : (
+                            <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -853,135 +641,45 @@ export default function DashboardOverview() {
 
         {/* CAPA Action Board */}
         <div style={cardBase}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "20px",
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <h2 style={sectionTitle}>CAPA Action Board</h2>
-            <a
-              href="#"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "var(--accent-emerald)",
-                textDecoration: "none",
-                transition: "opacity 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-            >
-              View Board <IconArrowUpRight />
-            </a>
+            {!isEmpty && (
+              <a href="#" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", fontWeight: 700, color: "var(--accent-emerald)", textDecoration: "none", transition: "opacity 0.15s ease" }}>
+                View Board <IconArrowUpRight />
+              </a>
+            )}
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {capas.map((capa) => {
-              const statusMeta = getCapaStatusMeta(capa.status);
-              const sevMeta = getSeverityMeta(capa.severity);
-              const isOverdue = new Date(capa.dueDate) < new Date("2024-06-16");
+            {data.capas.length === 0 ? (
+              <div style={emptyStateStyle}>Aucune donnée disponible pour cet établissement</div>
+            ) : (
+              data.capas.map((capa) => {
+                const statusMeta = getCapaStatusMeta(capa.status);
+                const sevMeta = getSeverityMeta(capa.severity);
+                const isOverdue = new Date(capa.dueDate) < new Date("2024-06-16");
 
-              return (
-                <div
-                  key={capa.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "12px",
-                    padding: "14px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border-color)",
-                    backgroundColor: "var(--bg-main)",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--bg-card-hover)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px var(--shadow-color)";
-                    e.currentTarget.style.borderColor = "var(--border-hover)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--bg-main)";
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.borderColor = "var(--border-color)";
-                  }}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginBottom: "6px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <span
-                        style={{
-                          ...badgeBase,
-                          backgroundColor: sevMeta.bg,
-                          color: sevMeta.color,
-                          borderColor: sevMeta.border,
-                        }}
-                      >
-                        {sevMeta.label}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          color: isOverdue ? "var(--accent-red)" : "var(--text-secondary)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        <IconClock />
-                        {capa.dueDate}
-                      </span>
+                return (
+                  <div key={capa.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "14px", borderRadius: "12px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-main)", transition: "all 0.2s ease" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-card-hover)"; e.currentTarget.style.boxShadow = "0 4px 12px var(--shadow-color)"; e.currentTarget.style.borderColor = "var(--border-hover)"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-main)"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = "var(--border-color)"; }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", flexWrap: "wrap" }}>
+                        <span style={{ ...badgeBase, backgroundColor: sevMeta.bg, color: sevMeta.color, borderColor: sevMeta.border }}>{sevMeta.label}</span>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: isOverdue ? "var(--accent-red)" : "var(--text-secondary)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <IconClock /> {capa.dueDate}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={capa.title}>{capa.title}</p>
+                      <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>{capa.assignee}</p>
                     </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "var(--text-primary)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                      title={capa.title}
-                    >
-                      {capa.title}
-                    </p>
-                    <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
-                      {capa.assignee}
-                    </p>
+                    <div style={{ flexShrink: 0 }}>
+                      <span style={{ ...badgeBase, backgroundColor: statusMeta.bg, color: statusMeta.color, borderColor: statusMeta.border }}>{statusMeta.label}</span>
+                    </div>
                   </div>
-
-                  <div style={{ flexShrink: 0 }}>
-                    <span
-                      style={{
-                        ...badgeBase,
-                        backgroundColor: statusMeta.bg,
-                        color: statusMeta.color,
-                        borderColor: statusMeta.border,
-                      }}
-                    >
-                      {statusMeta.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
+
       </div>
     </div>
   );
