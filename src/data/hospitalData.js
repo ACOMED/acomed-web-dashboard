@@ -12,6 +12,7 @@ export const CATEGORY_CONFIG = [
 ];
 
 export const NATIONAL_AVERAGE = {
+  
   hygiene:      68,
   temperatures: 63,
   tracabilite:  61,

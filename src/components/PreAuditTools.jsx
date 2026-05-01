@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useLayoutEffect } from "react";
+import React, { useState, useCallback, useRef, useLayoutEffect, useEffect } from "react";
 import "./pre-audit-tools.css";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -103,6 +103,34 @@ const Ico = {
       <line x1="10" y1="9" x2="8" y2="9" />
     </svg>
   ),
+  X: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  ),
+  Building: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+      <path d="M9 22v-4h6v4" />
+      <line x1="9" y1="12" x2="9.01" y2="12" />
+      <line x1="15" y1="12" x2="15.01" y2="12" />
+    </svg>
+  ),
+  User: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  Calendar: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
 };
 
 const TYPE_META = {
@@ -110,6 +138,96 @@ const TYPE_META = {
   TEXT: { label: "TEXTE", color: "#0ea5e9", bg: "rgba(14,165,233,0.12)" },
   PHOTO: { label: "PHOTO", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
 };
+
+/* ═══════════════════════════════════════════════════════════════════
+   READ-ONLY SUMMARY TREE (for Confirmation Modal)
+   ═══════════════════════════════════════════════════════════════════ */
+function SummaryTree({ nodes, level = 0 }) {
+  if (!nodes || nodes.length === 0) return null;
+
+  return (
+    <ul style={{
+      listStyle: "none",
+      margin: 0,
+      padding: 0,
+      paddingLeft: level > 0 ? "20px" : "0",
+      borderLeft: level > 0 ? "2px solid #e2e8f0" : "none",
+      marginLeft: level > 0 ? "8px" : "0",
+      marginTop: level > 0 ? "8px" : "0",
+    }}>
+      {nodes.map((node) => {
+        const meta = TYPE_META[node.answer_type] || TYPE_META.BOOLEAN;
+        return (
+          <li key={node.id} style={{ marginBottom: "10px" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flexWrap: "wrap",
+              padding: "10px 14px",
+              background: "#f8fafc",
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0",
+            }}>
+              <span style={{
+                fontSize: "0.7rem",
+                fontWeight: 800,
+                padding: "2px 8px",
+                borderRadius: "4px",
+                color: meta.color,
+                background: meta.bg,
+                textTransform: "uppercase",
+                letterSpacing: "0.03em",
+              }}>
+                {meta.label}
+              </span>
+              <span style={{
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: "#0f172a",
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}>
+                {node.title || <span style={{ color: "#94a3b8", fontStyle: "italic" }}>Sans titre</span>}
+              </span>
+              {node.trigger_condition && (
+                <span style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  padding: "2px 8px",
+                  borderRadius: "999px",
+                  ...(node.trigger_condition === 'OUI'
+                    ? { color: "#065f46", background: "#d1fae5", border: "1px solid #a7f3d0" }
+                    : { color: "#991b1b", background: "#fee2e2", border: "1px solid #fecaca" })
+                }}>
+                  IF {node.trigger_condition}
+                </span>
+              )}
+              {node.require_photo && (
+                <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: "2px" }}>
+                  <Ico.Camera style={{ width: "10px", height: "10px" }} />
+                  Photo
+                </span>
+              )}
+              {node.require_note && (
+                <span style={{ fontSize: "0.7rem", color: "#3b82f6", fontWeight: 700, display: "flex", alignItems: "center", gap: "2px" }}>
+                  <Ico.FileText style={{ width: "10px", height: "10px" }} />
+                  Note
+                </span>
+              )}
+            </div>
+            {node.children && node.children.length > 0 && (
+              <SummaryTree nodes={node.children} level={level + 1} />
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    FLOW NODE CARD (Recursive Component)
@@ -176,7 +294,7 @@ function FlowNode({ node, isRoot, onAddChild, onUpdate, onDelete }) {
             </span>
             {triggerBadge}
 
-            {/* ── NEW: Evidence Required Indicators ── */}
+            {/* ── Evidence Required Indicators ── */}
             <div style={{ display: "flex", gap: "4px", marginLeft: "auto" }}>
               {node.require_photo && (
                 <span title="L'auditeur doit ajouter une Photo ici" style={{
@@ -401,12 +519,22 @@ export default function PreAuditTools() {
 
   const [nodes, setNodes] = useState([]);
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [missionData, setMissionData] = useState({
     facilityId: "",
     inspectorId: "",
     scheduledTime: ""
   });
+
+  /* ── Close modal on Escape ── */
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && showConfirmModal) setShowConfirmModal(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showConfirmModal]);
 
   const handleAddRootNode = useCallback(() => {
     setNodes((prev) => [...prev, createNode()]);
@@ -424,7 +552,13 @@ export default function PreAuditTools() {
     setNodes((prev) => deleteNodeById(prev, id));
   }, []);
 
-  const handleSave = useCallback(async () => {
+  /* Open confirmation modal */
+  const handleOpenConfirm = useCallback(() => {
+    setShowConfirmModal(true);
+  }, []);
+
+  /* Actual save triggered from modal */
+  const handleConfirmSave = useCallback(async () => {
     setSaveStatus("saving");
 
     const finalPayload = {
@@ -436,6 +570,7 @@ export default function PreAuditTools() {
 
     setTimeout(() => {
       setSaveStatus("success");
+      setShowConfirmModal(false);
       setTimeout(() => setSaveStatus("idle"), 3000);
     }, 1500);
   }, [nodes, guideName, missionData]);
@@ -458,8 +593,235 @@ export default function PreAuditTools() {
     fontFamily: "inherit",
   };
 
+  const ghostBtnStyle = {
+    background: "transparent",
+    color: "#64748b",
+    border: "1px solid #e2e8f0",
+    borderRadius: "10px",
+    padding: "10px 18px",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    fontSize: "0.875rem",
+    fontFamily: "inherit",
+  };
+
+  const selectedFacility = FACILITIES.find(f => f.id === missionData.facilityId);
+  const selectedInspector = INSPECTORS.find(i => i.id === missionData.inspectorId);
+
   return (
     <div className="pa-builder-view" style={{ display: "block", height: "auto", overflowY: "auto", paddingBottom: "2rem" }}>
+      {/* ── CONFIRMATION MODAL ── */}
+      {showConfirmModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.55)",
+            backdropFilter: "blur(4px)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowConfirmModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: "16px",
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.2)",
+              width: "100%",
+              maxWidth: "640px",
+              maxHeight: "85vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              animation: "modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          >
+            <style>{`
+              @keyframes modalEnter {
+                from { opacity: 0; transform: scale(0.96) translateY(8px); }
+                to { opacity: 1; transform: scale(1) translateY(0); }
+              }
+            `}</style>
+
+            {/* Modal Header */}
+            <div style={{
+              padding: "24px 24px 16px",
+              borderBottom: "1px solid #e2e8f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700, color: "#0f172a" }}>
+                  Résumé du Template
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "0.8125rem", color: "#64748b" }}>
+                  Vérifiez les détails avant l'envoi définitif
+                </p>
+              </div>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer",
+                  padding: "6px",
+                  borderRadius: "8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                aria-label="Fermer"
+              >
+                <Ico.X style={{ width: "18px", height: "18px" }} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "24px", overflowY: "auto", flex: 1 }}>
+              {/* Guide Name */}
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+                  Nom du Guide
+                </div>
+                <div style={{ fontSize: "1rem", fontWeight: 700, color: "#0f172a" }}>
+                  {guideName}
+                </div>
+              </div>
+
+              {/* Mission Details Grid */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                gap: "12px",
+                marginBottom: "24px",
+              }}>
+                <div style={{
+                  padding: "12px",
+                  background: "#f8fafc",
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                }}>
+                  <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#64748b", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <Ico.Building style={{ width: "12px", height: "12px" }} />
+                    Établissement
+                  </div>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0f172a" }}>
+                    {selectedFacility?.name || "Non sélectionné"}
+                  </div>
+                </div>
+                <div style={{
+                  padding: "12px",
+                  background: "#f8fafc",
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                }}>
+                  <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#64748b", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <Ico.User style={{ width: "12px", height: "12px" }} />
+                    Inspecteur
+                  </div>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0f172a" }}>
+                    {selectedInspector?.name || "Non sélectionné"}
+                  </div>
+                </div>
+                <div style={{
+                  padding: "12px",
+                  background: "#f8fafc",
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                }}>
+                  <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#64748b", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <Ico.Calendar style={{ width: "12px", height: "12px" }} />
+                    Date Planifiée
+                  </div>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#0f172a" }}>
+                    {missionData.scheduledTime
+                      ? new Date(missionData.scheduledTime).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })
+                      : "Non planifiée"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Questions Tree Summary */}
+              <div>
+                <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "12px" }}>
+                  Arborescence des Questions ({nodes.length} racine{nodes.length > 1 ? "s" : ""})
+                </div>
+                {nodes.length === 0 ? (
+                  <div style={{
+                    padding: "24px",
+                    textAlign: "center",
+                    color: "#94a3b8",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                    background: "#f8fafc",
+                    borderRadius: "10px",
+                    border: "1px dashed #cbd5e1",
+                  }}>
+                    Aucune question définie dans ce template.
+                  </div>
+                ) : (
+                  <SummaryTree nodes={nodes} />
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: "16px 24px 24px",
+              borderTop: "1px solid #e2e8f0",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+            }}>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                style={ghostBtnStyle}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "#e2e8f0";
+                }}
+              >
+                Modifier
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                disabled={saveStatus === "saving"}
+                style={primaryBtnStyle}
+                onMouseEnter={(e) => {
+                  if (saveStatus !== "saving") {
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.45)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.3)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <Ico.Save style={{ width: "0.9rem", height: "0.9rem" }} />
+                {saveStatus === "saving" ? "Envoi en cours..." : "Confirmer et Envoyer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="pa-builder-header">
         <div>
           <h1 className="pa-builder-title">
@@ -471,7 +833,7 @@ export default function PreAuditTools() {
           </p>
         </div>
         <button
-          onClick={handleSave}
+          onClick={handleOpenConfirm}
           disabled={saveStatus === "saving"}
           style={primaryBtnStyle}
           onMouseEnter={(e) => {
@@ -486,7 +848,7 @@ export default function PreAuditTools() {
           }}
         >
           <Ico.Save style={{ width: "0.9rem", height: "0.9rem" }} />
-          {saveStatus === "saving" ? "Sauvegarde..." : saveStatus === "success" ? "Enregistre !" : "Sauvegarder le Template"}
+          {saveStatus === "success" ? "Enregistre !" : "Sauvegarder le Template"}
         </button>
       </div>
 
@@ -532,7 +894,7 @@ export default function PreAuditTools() {
       {nodes.length > 0 && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem", marginBottom: "1rem" }}>
           <button
-            onClick={handleSave}
+            onClick={handleOpenConfirm}
             disabled={saveStatus === "saving"}
             style={{ ...primaryBtnStyle, padding: "12px 28px", fontSize: "1rem" }}
             onMouseEnter={(e) => {
@@ -547,7 +909,7 @@ export default function PreAuditTools() {
             }}
           >
             <Ico.Save style={{ width: "1rem", height: "1rem" }} />
-            {saveStatus === "saving" ? "Compilation JSON..." : "Sauvegarder le Template"}
+            Sauvegarder le Template
           </button>
         </div>
       )}
@@ -605,7 +967,7 @@ export default function PreAuditTools() {
               type="datetime-local"
               className="pa-toolbar-input"
               style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem", color: "inherit" }}
-              value={missionData.scheduledTime}
+              value={missionData.scheduledTime} 
               onChange={(e) => setMissionData(p => ({ ...p, scheduledTime: e.target.value }))}
             />
           </div>
