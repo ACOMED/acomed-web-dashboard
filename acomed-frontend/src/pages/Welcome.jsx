@@ -1,302 +1,409 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ── Particles Background (mimics tsparticles) ──
-const Particles = () => {
-  useEffect(() => {
-    const canvas = document.getElementById('hero-particles');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    const particleCount = 60;
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    };
-    window.addEventListener('resize', resize);
-    resize();
-
-    class Particle {
-      constructor() {
-        this.reset();
-      }
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
-        this.size = Math.random() * 2;
-      }
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-      }
-      draw() {
-        ctx.fillStyle = 'rgba(163, 222, 131, 0.5)';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    for (let i = 0; i < particleCount; i++) particles.push(new Particle());
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p, i) => {
-        p.update();
-        p.draw();
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (dist < 100) {
-            ctx.strokeStyle = `rgba(163, 222, 131, ${1 - dist / 100})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        }
-      });
-      requestAnimationFrame(animate);
-    };
-    animate();
-    return () => window.removeEventListener('resize', resize);
-  }, []);
-
-  return <canvas id="hero-particles" style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }} />;
-};
-
-// ── Typewriter Effect ──
-const Typewriter = () => {
-  const words = ["Futur De L'Audit", "ACOMED"];
-  const [text, setText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [loopNum, setLoopNum] = useState(0);
-  const [typingSpeed, setTypingSpeed] = useState(150);
-
-  useEffect(() => {
-    const handleTyping = () => {
-      const i = loopNum % words.length;
-      const fullText = words[i];
-
-      setText(isDeleting
-        ? fullText.substring(0, text.length - 1)
-        : fullText.substring(0, text.length + 1)
-      );
-
-      setTypingSpeed(isDeleting ? 50 : 150);
-
-      if (!isDeleting && text === fullText) {
-        setTimeout(() => setIsDeleting(true), 1500);
-      } else if (isDeleting && text === '') {
-        setIsDeleting(false);
-        setLoopNum(loopNum + 1);
-      }
-    };
-
-    const timer = setTimeout(handleTyping, typingSpeed);
-    return () => clearTimeout(timer);
-  }, [text, isDeleting, loopNum, typingSpeed]);
-
+// ── FAQ Accordion Item ──
+const FAQItem = ({ question }) => {
+  const [open, setOpen] = useState(false);
   return (
-    <span style={{ color: '#fff', zIndex: 10, position: 'relative' }}>
-      {text}
-      <span style={{ animation: 'blink 1s step-end infinite', color: '#A3DE83' }}>|</span>
-    </span>
+    <div className="faq-item" onClick={() => setOpen(!open)}>
+      <div className="faq-question">
+        <span>{question}</span>
+        <svg
+          className={`faq-arrow ${open ? 'open' : ''}`}
+          viewBox="0 0 24 24" width="20" height="20"
+          stroke="currentColor" strokeWidth="2" fill="none"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+      {open && (
+        <div className="faq-answer">
+          Pour toute question concernant ce sujet, n'hésitez pas à nous contacter directement via notre portail de support ou à consulter notre documentation en ligne.
+        </div>
+      )}
+    </div>
   );
 };
 
-const WavyDivider = ({ fill, flip, absolute }) => (
-  <svg
-    className={`wavy-divider ${absolute ? 'absolute-divider' : ''}`}
-    viewBox="0 0 1440 100"
-    preserveAspectRatio="none"
-    style={{ transform: flip ? 'rotate(180deg)' : 'none' }}
-  >
-    <path
-      fill={fill}
-      d="M0,40 C320,100 480,0 720,40 C960,80 1120,0 1440,40 L1440,100 L0,100 Z"
-    ></path>
-  </svg>
-);
+// ── Bar Chart (pure CSS/SVG) ──
+const BarChart = ({ title, data }) => {
+  const maxVal = Math.max(...data.flatMap(d => d.values));
+  const colors = ['#2196F3', '#26C6DA'];
+  return (
+    <div className="chart-card">
+      <div className="chart-title">{title}</div>
+      <div className="chart-legend">
+        <span className="legend-dot" style={{ background: colors[0] }} /> Réglementaire
+        <span className="legend-dot" style={{ background: colors[1], marginLeft: 12 }} /> Maturité
+      </div>
+      <div className="bar-chart">
+        {data.map((item, i) => (
+          <div key={i} className="bar-group">
+            <div className="bar-pair">
+              {item.values.map((val, j) => (
+                <div
+                  key={j}
+                  className="bar-fill"
+                  style={{
+                    height: `${(val / maxVal) * 120}px`,
+                    background: colors[j],
+                    opacity: 0.85
+                  }}
+                />
+              ))}
+            </div>
+            <div className="bar-label">{item.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── Donut Gauge ──
+const DonutGauge = ({ value, label, color }) => {
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const dash = (value / 100) * circ;
+  return (
+    <div className="donut-wrap">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r={r} fill="none" stroke="#e8ecf0" strokeWidth="10" />
+        <circle
+          cx="45" cy="45" r={r} fill="none"
+          stroke={color}
+          strokeWidth="10"
+          strokeDasharray={`${dash} ${circ - dash}`}
+          strokeLinecap="round"
+          transform="rotate(-90 45 45)"
+        />
+        <text x="45" y="50" textAnchor="middle" fontSize="14" fontWeight="700" fill="#1a1c23">{value}%</text>
+      </svg>
+      <div className="donut-label">{label}</div>
+    </div>
+  );
+};
 
 export default function Welcome() {
   const navigate = useNavigate();
 
+  const features = [
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      ),
+      title: "Moteur d'Audit",
+      desc: 'Outils d’audit flexibles et configurables pour tout type de processus'
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+          <polyline points="17 6 23 6 23 12" />
+        </svg>
+      ),
+      title: 'Gestionnaire de Sync',
+      desc: 'Synchronisation bidirectionnelle, même sans connexion internet'
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none">
+          <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+      ),
+      title: 'Moteur de Score',
+      desc: 'Évaluation automatisée en temps réel et analyse des risques'
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none">
+          <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+      ),
+      title: 'Workflow CAPA',
+      desc: 'Suivi intégré des Actions Correctives et Préventives'
+    }
+  ];
+
+  const chartData1 = [
+    { label: 'Conf. Rég.', values: [70, 55] },
+    { label: 'Secteur', values: [55, 45] },
+  ];
+  const chartData2 = [
+    { label: 'Conf. Rég.', values: [80, 60] },
+    { label: 'Maturité', values: [65, 75] },
+  ];
+
+  const stats = [
+    { val: '30%', sub: 'Moins conformes' },
+    { val: '31%', sub: 'Impact réglementaire' },
+    { val: '30%', sub: 'Faible conformité secondaire' },
+    { val: '50%', sub: 'Évaluation maturité réduite' },
+    { val: '60%', sub: 'Meilleure collaboration' },
+    { val: '50%', sub: 'Évaluation inférieure' },
+  ];
+
+  const plans = [
+    {
+      name: 'Basique',
+      price: '40€',
+      period: '/mois',
+      cta: 'Acheter',
+      highlight: false,
+      features: ['Hors ligne', 'Multi-établissements', 'Avancé', 'Limites CAPA']
+    },
+    {
+      name: 'Professionnel',
+      price: '500€',
+      period: '/mois',
+      cta: 'Nous contacter',
+      highlight: true,
+      features: ['Hors ligne', 'Multi-établissements', 'Score préventif', 'Limites CQHA', 'Sites illimités']
+    },
+    {
+      name: 'Entreprise',
+      price: '1 000€',
+      period: '/mois',
+      cta: 'Démarrer',
+      highlight: false,
+      features: ['Hors ligne', 'Multi-établissements', 'Score en temps réel', 'Paramétrage CAPA', 'Supervision & gestion']
+    }
+  ];
+
+  const faqs = [
+    'Les données sont-elles sécurisées ?',
+    'Comment fonctionne l’intégration ?',
+    'Comment ACOMED protège-t-il les données ?',
+    'Comment ACOMED innove-t-il ?',
+    'Combien utilisent ses optimisations ?'
+  ];
+
   return (
-    <div className="welcome-1337">
-      {/* ── Fixed Navbar ── */}
-      <header className="nav-1337">
-        <div className="logo-1337">
-          <img src="/logo.png" alt="ACOMED Logo" style={{ height: '32px', filter: 'brightness(0) invert(1)' }} />
+    <div className="wlc-page">
+      {/* ── Topbar ── */}
+      <header className="wlc-nav">
+        <div className="wlc-nav-logo">
+          <img src="/logo.png" alt="ACOMED" style={{ height: 32 }} />
         </div>
-        <nav className="links-1337">
-          <a href="#adn">L'ADN</a>
-          <a href="#campuses">Nos Campuses</a>
-          <a href="#concept">Concept</a>
-          <a href="#rejoindre">Nous Rejoindre</a>
+        <nav className="wlc-nav-links">
+          <a href="#features">Produits</a>
+          <a href="#scoring">Solutions</a>
+          <a href="#pricing">Tarifs</a>
+          <a href="#pricing">Entreprise</a>
         </nav>
-        <div className="actions-1337">
-          <button className="btn-lang">Français ▼</button>
-          <button className="btn-login-1337" onClick={() => navigate('/login')}>
-            Inscris-toi
-          </button>
+        <div className="wlc-nav-actions">
+          <button className="wlc-btn-ghost" onClick={() => navigate('/login')}>Se connecter</button>
+          <button className="wlc-btn-primary" onClick={() => navigate('/login')}>Demander une démo</button>
         </div>
       </header>
 
-      {/* ── Hero Section ── */}
-      <main className="hero-1337" style={{ backgroundImage: 'url("/hero.png")' }}>
-        <Particles />
-        <div className="hero-overlay">
-          <div className="hero-content-center">
-            <h1 className="hero-title-large">
-              <Typewriter />
-            </h1>
+      {/* ── Hero ── */}
+      <section className="wlc-hero">
+        <div className="wlc-hero-text">
+          <div className="wlc-hero-badge">Hors Ligne d'abord</div>
+          <h1 className="wlc-hero-title">
+            Auditez Partout,<br />Synchronisez Tout.
+          </h1>
+          <p className="wlc-hero-sub">
+            Notre moteur hors ligne robuste garantit que les professionnels<br />
+            de la conformité médicale peuvent auditer, suivre et synchroniser en toute fluidité.
+          </p>
+          <div className="wlc-hero-ctas">
+            <button className="wlc-btn-primary large" onClick={() => navigate('/login')}>Commencer gratuitement</button>
+            <button className="wlc-btn-outline large" onClick={() => navigate('/login')}>Voir la démo</button>
           </div>
         </div>
-        <WavyDivider fill="#ffffff" absolute />
-      </main>
-
-      {/* ── ADN Section ── */}
-      <section id="adn" className="adn-section">
-        <div className="adn-container">
-          <h2 className="section-title-1337">L'adn ACOMED</h2>
-          <div className="green-dot-line">
-            <div className="green-dot"></div>
-            <div className="green-dot"></div>
-            <div className="green-dot"></div>
+        <div className="wlc-hero-visuals">
+          <div className="wlc-device-desktop">
+            <svg viewBox="0 0 320 200" width="320" height="200">
+              <rect x="0" y="0" width="320" height="200" rx="12" fill="#f0f4ff" stroke="#dbe4ff" strokeWidth="2"/>
+              <rect x="10" y="10" width="300" height="150" rx="6" fill="#fff" stroke="#e0e7ff" strokeWidth="1"/>
+              <rect x="20" y="20" width="80" height="10" rx="2" fill="#2563eb" opacity="0.2"/>
+              <rect x="20" y="36" width="260" height="6" rx="2" fill="#e5e7eb"/>
+              <rect x="20" y="48" width="200" height="6" rx="2" fill="#e5e7eb"/>
+              <rect x="20" y="65" width="120" height="60" rx="6" fill="#eff6ff" stroke="#bfdbfe" strokeWidth="1"/>
+              <rect x="150" y="65" width="130" height="60" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1"/>
+              <rect x="20" y="135" width="260" height="16" rx="4" fill="#f1f5f9"/>
+              <rect x="130" y="168" width="60" height="8" rx="2" fill="#d1d5db"/>
+              <rect x="125" y="178" width="70" height="14" rx="2" fill="#e5e7eb"/>
+            </svg>
           </div>
-
-          <div className="video-box-1337">
-            <div className="video-placeholder" style={{ backgroundImage: 'url("/hero.png")', opacity: 0.8 }}>
-              <div className="play-btn-1337">
-                <svg viewBox="0 0 24 24" width="40" height="40" fill="#1a1c23">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="adn-description">
-            <p><strong>JE CODE, TU CODES, NOUS CODONS …</strong></p>
-            <p>
-              ACOMED est la première plateforme d'audit médical pensée pour les inspecteurs,
-              totalement gratuite dans sa phase d'essai, accessible partout et surtout 100% fonctionnelle hors-ligne.
-              C’est une immersion complète dans un univers où le futur de la santé est déjà présent.
-            </p>
-            <p>
-              La pédagogie d'ACOMED s’articule autour de l'efficacité sur le terrain.
-              Un fonctionnement intuitif qui permet aux inspecteurs de libérer leur potentiel
-              grâce à une interface simplifiée et des rapports générés en temps réel.
-            </p>
-          </div>
-
-          {/* ── Grid Cards ── */}
-          <div className="grid-3-1337">
-            <div className="card-1337">
-              <div className="icon-wrap">
-                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V7m16 14V7" /></svg>
-              </div>
-              <h3>Nos Campuses</h3>
-              <p>Tous les ingrédients sont réunis pour faire de vos audits une réussite totale.</p>
-            </div>
-            <div className="card-1337">
-              <div className="icon-wrap">
-                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-              </div>
-              <h3>Les Étapes</h3>
-              <p>Le processus est entièrement digitalisé. Aucun papier ne sera gaspillé durant le cursus.</p>
-            </div>
-            <div className="card-1337">
-              <div className="icon-wrap">
-                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" strokeWidth="2" fill="none"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" /></svg>
-              </div>
-              <h3>FAQ</h3>
-              <p>Tu as des questions ? Consultez nos F.A.Q, tu y trouveras sans doute les réponses.</p>
-            </div>
+          <div className="wlc-device-phone">
+            <svg viewBox="0 0 100 180" width="100" height="180">
+              <rect x="5" y="5" width="90" height="170" rx="14" fill="#fff" stroke="#e0e7ff" strokeWidth="2"/>
+              <rect x="35" y="12" width="30" height="4" rx="2" fill="#d1d5db"/>
+              <rect x="12" y="25" width="76" height="50" rx="4" fill="#eff6ff"/>
+              <rect x="15" y="28" width="40" height="6" rx="2" fill="#2563eb" opacity="0.3"/>
+              <rect x="15" y="40" width="60" height="4" rx="2" fill="#e5e7eb"/>
+              <rect x="15" y="50" width="50" height="4" rx="2" fill="#e5e7eb"/>
+              <rect x="12" y="82" width="35" height="35" rx="4" fill="#f0fdf4" stroke="#bbf7d0"/>
+              <rect x="53" y="82" width="35" height="35" rx="4" fill="#fef3c7" stroke="#fde68a"/>
+              <rect x="12" y="125" width="76" height="30" rx="4" fill="#f8fafc"/>
+              <circle cx="50" cy="168" r="5" fill="#d1d5db"/>
+            </svg>
           </div>
         </div>
       </section>
 
-      {/* ── Pourquoi Section ── */}
-      <WavyDivider fill="#1a1c23" flip />
-      <section className="pourquoi-section">
-        <div className="pourquoi-content">
-          <h2>Pourquoi ACOMED?</h2>
-          <div className="green-dot-line">
-            <div className="green-dot"></div>
-            <div className="green-dot"></div>
-            <div className="green-dot"></div>
-          </div>
-          <p>
-            Tout d’abord, il faudra prendre l’habitude de voir l'audit comme un outil de progression et non de sanction.
-            ACOMED vient simplifier les échanges entre les inspecteurs et les établissements de santé.
-            Une application robuste, rapide et intelligente.
+      {/* ── Features ── */}
+      <section id="features" className="wlc-section wlc-features-section">
+        <div className="wlc-features-grid">
+          {features.map((f, i) => (
+            <div key={i} className="wlc-feature-card">
+              <div className="wlc-feature-icon">{f.icon}</div>
+              <h3 className="wlc-feature-title">{f.title}</h3>
+              <p className="wlc-feature-desc">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Why ACOMED ── */}
+      <section id="scoring" className="wlc-section wlc-why-section">
+        <div className="wlc-section-header">
+          <h2 className="wlc-section-title">Pourquoi ACOMED : Double Score</h2>
+          <p className="wlc-section-sub">
+            Notre moteur hors ligne mesure la conformité médicale selon deux axes :<br />
+            conformité réglementaire et évaluation de maturité, synchronisés partout.
           </p>
         </div>
+        <div className="wlc-charts-row">
+          <BarChart title="Conformité Réglementaire" data={chartData1} />
+          <BarChart title="Évaluation de Maturité" data={chartData2} />
+        </div>
       </section>
 
-      {/* ── Route Section ── */}
-      <WavyDivider fill="#ffffff" />
-      <section className="route-section">
-        <div className="route-container">
-          <h2 className="section-title-1337" style={{ textAlign: 'center', marginBottom: '60px' }}>La route vers ACOMED</h2>
-
-          <div className="route-step">
-            <div className="step-icon">01</div>
-            <div className="step-info">
-              <h3><span>#1 </span> - Test En Ligne - 2 Heures</h3>
-              <p>Votre admission commence par une évaluation de vos compétences analytiques directement sur notre portail.</p>
+      {/* ── Reg vs Maturity ── */}
+      <section className="wlc-section wlc-scoring-section">
+        <h2 className="wlc-section-title">Conformité Réglementaire vs. Évaluation de Maturité</h2>
+        <div className="wlc-scoring-row">
+          <div className="wlc-scoring-block">
+            <div className="wlc-scoring-label">
+              <div className="wlc-scoring-tag regulatory">Conformité Réglementaire</div>
             </div>
-          </div>
-
-          <div className="route-step">
-            <div className="step-icon">02</div>
-            <div className="step-info">
-              <h3><span>#2 </span> - Check-in</h3>
-              <p>Une fois les tests validés, rejoignez-nous pour une session d'orientation et de paramétrage de vos outils.</p>
+            <div className="wlc-scoring-gauges">
+              <DonutGauge value={76} label="Rég." color="#2196F3" />
+              <DonutGauge value={54} label="Secteur" color="#90CAF9" />
             </div>
+            <p className="wlc-scoring-desc">
+              <strong>Conformité Réglementaire</strong> — Les actions réglementaires ont été prises afin d'assurer la sécurité et la conformité des établissements de santé.
+            </p>
           </div>
-
-          <div className="route-step">
-            <div className="step-icon">03</div>
-            <div className="step-info">
-              <h3><span>#3 </span> - Piscine d'Audit - 4 Semaines</h3>
-              <p>Une immersion intensive dans des scénarios d'audit réels pour maîtriser chaque recoin de l'application.</p>
+          <div className="wlc-scoring-block">
+            <div className="wlc-scoring-label">
+              <div className="wlc-scoring-tag maturity">Évaluation de Maturité</div>
             </div>
-          </div>
-
-          <div className="route-step">
-            <div className="step-icon">04</div>
-            <div className="step-info">
-              <h3><span>#4 </span> - Départ en Mission</h3>
-              <p>Début de l'aventure ACOMED. Vous êtes maintenant prêt à transformer le paysage médical.</p>
+            <div className="wlc-scoring-gauges">
+              <DonutGauge value={82} label="Rég." color="#26C6DA" />
+              <DonutGauge value={68} label="Maturité" color="#80DEEA" />
             </div>
+            <p className="wlc-scoring-desc">
+              <strong>Évaluation de Maturité</strong> — La maturité est mesurée dès que les exigences de conformité sont atteintes, sécurisant à la fois le cadre réglementaire et la progression.
+            </p>
           </div>
+        </div>
+
+        {/* Stats bar */}
+        <div className="wlc-stats-bar">
+          {stats.map((s, i) => (
+            <div key={i} className="wlc-stat-item">
+              <div className="wlc-stat-val">{s.val}</div>
+              <div className="wlc-stat-sub">{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section id="pricing" className="wlc-section wlc-pricing-section">
+        <div className="wlc-section-header">
+          <h2 className="wlc-section-title">Tarification</h2>
+          <p className="wlc-section-sub">Choisissez le forfait ACOMED qui correspond à vos besoins.</p>
+        </div>
+        <div className="wlc-pricing-grid">
+          {plans.map((plan, i) => (
+            <div key={i} className={`wlc-pricing-card ${plan.highlight ? 'highlighted' : ''}`}>
+              <div className="wlc-plan-name">{plan.name}</div>
+              <div className="wlc-plan-price">
+                <span className="wlc-price-num">{plan.price}</span>
+                <span className="wlc-price-period">{plan.period}</span>
+              </div>
+              <button
+                className={plan.highlight ? 'wlc-btn-primary plan-cta' : 'wlc-btn-outline plan-cta'}
+                onClick={() => navigate('/login')}
+              >
+                {plan.cta}
+              </button>
+              <ul className="wlc-plan-features">
+                {plan.features.map((feat, j) => (
+                  <li key={j}>
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="#22c55e" strokeWidth="2.5" fill="none">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+              <button
+                className="wlc-plan-link"
+                onClick={() => navigate('/login')}
+              >
+                {plan.highlight ? 'Grandes entreprises' : plan.name === 'Basique' ? 'Acheter' : 'Grandes entreprises'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Trust & Security ── */}
+      <section className="wlc-section wlc-faq-section">
+        <div className="wlc-section-header">
+          <h2 className="wlc-section-title">Confiance &amp; Sécurité</h2>
+          <p className="wlc-section-sub">Consultez notre FAQ sur la sécurité et la protection des données ACOMED.</p>
+        </div>
+        <div className="wlc-faq-list">
+          {faqs.map((q, i) => (
+            <FAQItem key={i} question={q} />
+          ))}
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="footer-1337">
-        <div className="footer-top">
-          <div className="footer-cta">
-            <h2>Prêt(e) à relever le défi?</h2>
-            <button className="btn-footer" onClick={() => navigate('/login')}>Inscris-toi</button>
+      <footer className="wlc-footer">
+        <div className="wlc-footer-top">
+          <div className="wlc-footer-brand">
+            <img src="/logo.png" alt="ACOMED" style={{ height: 32, marginBottom: 10 }} />
+            <p>© 2026 ACOMED. Tous droits réservés.</p>
           </div>
-          <div className="social-links">
-            <a href="#" className="social-icon">F</a>
-            <a href="#" className="social-icon">T</a>
-            <a href="#" className="social-icon">I</a>
-            <a href="#" className="social-icon">Y</a>
+          <div className="wlc-footer-cols">
+            <div className="wlc-footer-col">
+              <div className="wlc-footer-col-title">Plan du site</div>
+              <a href="#features">Produits</a>
+              <a href="#scoring">Solutions</a>
+              <a href="#pricing">Tarifs</a>
+              <a href="#">Vitrine</a>
+              <a href="#">Entreprise</a>
+            </div>
+            <div className="wlc-footer-col">
+              <div className="wlc-footer-col-title">Entreprise</div>
+              <a href="#">Politique de confidentialité</a>
+              <a href="#">Conditions d'utilisation</a>
+              <a href="#">Nous contacter</a>
+            </div>
+          </div>
+          <div className="wlc-footer-socials">
+            {['f', 't', 'in', 'yt'].map((s, i) => (
+              <a key={i} href="#" className="wlc-social-btn">{s}</a>
+            ))}
           </div>
         </div>
-        <div className="footer-bottom">
-          <p>© 2026 | ACOMED est un organisme dédié à l'excellence médicale.</p>
+        <div className="wlc-footer-bottom">
+          <span>Politique de confidentialité</span>
+          <span>Conditions d'utilisation</span>
+          <span>Nous contacter</span>
         </div>
       </footer>
     </div>
