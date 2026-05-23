@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 // ── FAQ Accordion Item ──
 const FAQItem = ({ question }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); 
   return (
     <div className="faq-item" onClick={() => setOpen(!open)}>
       <div className="faq-question">
@@ -218,31 +218,75 @@ export default function Welcome() {
         </div>
         <div className="wlc-hero-visuals">
           <div className="wlc-device-desktop">
-            <svg viewBox="0 0 320 200" width="320" height="200">
-              <rect x="0" y="0" width="320" height="200" rx="12" fill="#f0f4ff" stroke="#dbe4ff" strokeWidth="2"/>
-              <rect x="10" y="10" width="300" height="150" rx="6" fill="#fff" stroke="#e0e7ff" strokeWidth="1"/>
-              <rect x="20" y="20" width="80" height="10" rx="2" fill="#2563eb" opacity="0.2"/>
-              <rect x="20" y="36" width="260" height="6" rx="2" fill="#e5e7eb"/>
-              <rect x="20" y="48" width="200" height="6" rx="2" fill="#e5e7eb"/>
-              <rect x="20" y="65" width="120" height="60" rx="6" fill="#eff6ff" stroke="#bfdbfe" strokeWidth="1"/>
-              <rect x="150" y="65" width="130" height="60" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1"/>
-              <rect x="20" y="135" width="260" height="16" rx="4" fill="#f1f5f9"/>
-              <rect x="130" y="168" width="60" height="8" rx="2" fill="#d1d5db"/>
-              <rect x="125" y="178" width="70" height="14" rx="2" fill="#e5e7eb"/>
+            <svg viewBox="0 0 320 220" width="320" height="220">
+              <defs>
+                <clipPath id="desktop-screen-clip">
+                  {/* Clip to inner screen bezel */}
+                  <rect x="10" y="10" width="300" height="165" rx="4"/>
+                </clipPath>
+                <linearGradient id="desktop-glare" x1="0" y1="0" x2="0.5" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15"/>
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              {/* Monitor outer bezel */}
+              <rect x="0" y="0" width="320" height="185" rx="10" fill="#1a1a2e" stroke="#3a3a5c" strokeWidth="1.5"/>
+              {/* Inner screen area */}
+              <rect x="8" y="8" width="304" height="169" rx="5" fill="#0f0f1a"/>
+              {/* Dashboard screenshot */}
+              <image
+                href="/desktop-screenshot.png"
+                x="10" y="10"
+                width="300" height="165"
+                clipPath="url(#desktop-screen-clip)"
+                preserveAspectRatio="xMidYMin slice"
+              />
+              {/* Screen glare */}
+              <rect x="10" y="10" width="300" height="165" rx="4" fill="url(#desktop-glare)"/>
+              {/* Camera dot */}
+              <circle cx="160" cy="4" r="2" fill="#3a3a5c"/>
+              {/* Monitor stand neck */}
+              <rect x="145" y="185" width="30" height="18" rx="2" fill="#2a2a40"/>
+              {/* Monitor stand base */}
+              <rect x="110" y="200" width="100" height="10" rx="5" fill="#2a2a40"/>
+              {/* Power LED */}
+              <circle cx="306" cy="180" r="2" fill="#A3DE83" opacity="0.8"/>
             </svg>
           </div>
           <div className="wlc-device-phone">
             <svg viewBox="0 0 100 180" width="100" height="180">
-              <rect x="5" y="5" width="90" height="170" rx="14" fill="#fff" stroke="#e0e7ff" strokeWidth="2"/>
-              <rect x="35" y="12" width="30" height="4" rx="2" fill="#d1d5db"/>
-              <rect x="12" y="25" width="76" height="50" rx="4" fill="#eff6ff"/>
-              <rect x="15" y="28" width="40" height="6" rx="2" fill="#2563eb" opacity="0.3"/>
-              <rect x="15" y="40" width="60" height="4" rx="2" fill="#e5e7eb"/>
-              <rect x="15" y="50" width="50" height="4" rx="2" fill="#e5e7eb"/>
-              <rect x="12" y="82" width="35" height="35" rx="4" fill="#f0fdf4" stroke="#bbf7d0"/>
-              <rect x="53" y="82" width="35" height="35" rx="4" fill="#fef3c7" stroke="#fde68a"/>
-              <rect x="12" y="125" width="76" height="30" rx="4" fill="#f8fafc"/>
-              <circle cx="50" cy="168" r="5" fill="#d1d5db"/>
+              <defs>
+                <clipPath id="phone-screen-clip">
+                  {/* Clip to the inner screen area, inside the phone body */}
+                  <rect x="6" y="6" width="88" height="168" rx="13"/>
+                </clipPath>
+              </defs>
+              {/* Phone outer shell */}
+              <rect x="2" y="2" width="96" height="176" rx="16" fill="#1a1a2e" stroke="#3a3a5c" strokeWidth="1.5"/>
+              {/* Side buttons */}
+              <rect x="0" y="45" width="2" height="14" rx="1" fill="#3a3a5c"/>
+              <rect x="0" y="63" width="2" height="14" rx="1" fill="#3a3a5c"/>
+              <rect x="98" y="55" width="2" height="20" rx="1" fill="#3a3a5c"/>
+              {/* Notch/Dynamic Island */}
+              <rect x="30" y="7" width="40" height="6" rx="3" fill="#1a1a2e"/>
+              {/* App screenshot filling the screen */}
+              <image
+                href="/app-screenshot.png"
+                x="6" y="6"
+                width="88" height="168"
+                clipPath="url(#phone-screen-clip)"
+                preserveAspectRatio="xMidYMin slice"
+              />
+              {/* Screen glare overlay */}
+              <rect x="6" y="6" width="88" height="168" rx="13"
+                fill="url(#phone-glare)" opacity="0.08"
+              />
+              <defs>
+                <linearGradient id="phone-glare" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="1"/>
+                  <stop offset="50%" stopColor="#ffffff" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
             </svg>
           </div>
         </div>
